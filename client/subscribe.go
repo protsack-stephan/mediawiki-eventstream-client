@@ -2,7 +2,6 @@ package client
 
 import (
 	"bufio"
-	"log"
 	"net/http"
 )
 
@@ -33,7 +32,7 @@ func Subscribe(url string, handler func(evt *Event)) error {
 		line, err := reader.ReadBytes('\n')
 
 		if err != nil {
-			log.Panic(err)
+			return err
 		}
 
 		if len(line) <= 1 {
@@ -44,7 +43,7 @@ func Subscribe(url string, handler func(evt *Event)) error {
 		err = evt.SetID(body)
 
 		if err != nil {
-			err = evt.SetData(body)
+			evt.SetData(body)
 		}
 
 		if len(evt.ID) > 0 && len(evt.Data) > 0 {
