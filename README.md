@@ -1,3 +1,3 @@
-# Golang sse client
+# Mediawiki events stream client for Go
 
-Server side events client with custom reconnect functionality.
+Mediawiki server side events package.

@@ -2,10 +2,18 @@ package main
 
 import (
 	"fmt"
+	"log"
 
-	"github.com/protsack-stephan/sse"
+	eventstream "github.com/protsack-stephan/mediawiki-eventstream-client"
+	"github.com/protsack-stephan/mediawiki-eventstream-client/events"
 )
 
 func main() {
-	fmt.Println(sse.Client{})
+	err := eventstream.RevisionScore(func(evt *events.RevisionScore) {
+		fmt.Println(evt)
+	})
+
+	if err == nil {
+		log.Panic(err)
+	}
 }

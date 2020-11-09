@@ -1,0 +1,55 @@
+package client
+
+import (
+	"bufio"
+	"log"
+	"net/http"
+)
+
+// Subscribe listen to event stream
+func Subscribe(url string, handler func(evt *Event)) error {
+	client := &http.Client{}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("Connection", "keep-alive")
+	res, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+	reader := bufio.NewReader(res.Body)
+
+	evt := new(Event)
+
+	for {
+		line, err := reader.ReadBytes('\n')
+
+		if err != nil {
+			log.Panic(err)
+		}
+
+		if len(line) <= 1 {
+			continue
+		}
+
+		body := string(line)
+		err = evt.SetID(body)
+
+		if err != nil {
+			err = evt.SetData(body)
+		}
+
+		if len(evt.ID) > 0 && len(evt.Data) > 0 {
+			handler(evt)
+			evt = new(Event)
+		}
+	}
+}
