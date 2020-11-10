@@ -2,6 +2,7 @@ package eventstream
 
 import (
 	"context"
+	"time"
 
 	"github.com/protsack-stephan/mediawiki-eventstream-client/events"
 )
@@ -50,6 +51,27 @@ func (cl *Client) PageMove(ctx context.Context, handler func(evt *events.PageMov
 // RevisionCreate connect to revision create stream
 func (cl *Client) RevisionCreate(ctx context.Context, handler func(evt *events.RevisionCreate)) error {
 	return revisionCreate(ctx, cl.RevisionCreateURL, handler)
+}
+
+// RevisionCreateKeepAlive connect to revision create stream with instant reconnect
+func (cl *Client) RevisionCreateKeepAlive(ctx context.Context, handler func(evt *events.RevisionCreate)) chan error {
+	errors := make(chan error)
+
+	go func() {
+		for {
+			err := cl.RevisionCreate(ctx, handler)
+
+			errors <- err
+			if err == context.Canceled {
+				close(errors)
+				break
+			} else {
+				time.Sleep(1 * time.Second)
+			}
+		}
+	}()
+
+	return errors
 }
 
 // RevisionScore connect to revision score stream
