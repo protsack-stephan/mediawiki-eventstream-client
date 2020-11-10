@@ -10,11 +10,13 @@ import (
 )
 
 func main() {
-	err := eventstream.RevisionScore(context.Background(), func(evt *events.RevisionScore) {
+	ctx := context.Background()
+
+	err := eventstream.RevisionScore(ctx, func(evt *events.RevisionScore) {
 		fmt.Println(evt)
 	})
 
-	if err == nil {
+	if err != nil {
 		log.Panic(err)
 	}
 }
