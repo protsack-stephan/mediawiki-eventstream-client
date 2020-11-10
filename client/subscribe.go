@@ -2,13 +2,14 @@ package client
 
 import (
 	"bufio"
+	"context"
 	"net/http"
 )
 
 // Subscribe listen to event stream
-func Subscribe(url string, handler func(evt *Event)) error {
+func Subscribe(ctx context.Context, url string, handler func(evt *Event)) error {
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
 	if err != nil {
 		return err

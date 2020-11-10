@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func main() {
-	err := eventstream.RevisionScore(func(evt *events.RevisionScore) {
+	err := eventstream.RevisionScore(context.Background(), func(evt *events.RevisionScore) {
 		fmt.Println(evt)
 	})
 

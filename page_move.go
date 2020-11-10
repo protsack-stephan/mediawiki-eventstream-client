@@ -1,6 +1,7 @@
 package eventstream
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/protsack-stephan/mediawiki-eventstream-client/client"
@@ -8,8 +9,8 @@ import (
 )
 
 // PageMove stream from mediawiki
-func PageMove(handler func(evt *events.PageMove)) error {
-	return client.Subscribe(pageMove, func(msg *client.Event) {
+func PageMove(ctx context.Context, handler func(evt *events.PageMove)) error {
+	return client.Subscribe(ctx, pageMove, func(msg *client.Event) {
 		evt := new(events.PageMove)
 		evt.ID = msg.ID
 

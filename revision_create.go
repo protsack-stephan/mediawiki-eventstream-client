@@ -1,6 +1,7 @@
 package eventstream
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/protsack-stephan/mediawiki-eventstream-client/client"
@@ -8,8 +9,8 @@ import (
 )
 
 // RevisionCreate stream from mediawiki
-func RevisionCreate(handler func(evt *events.RevisionCreate)) error {
-	return client.Subscribe(revisionCreate, func(msg *client.Event) {
+func RevisionCreate(ctx context.Context, handler func(evt *events.RevisionCreate)) error {
+	return client.Subscribe(ctx, revisionCreate, func(msg *client.Event) {
 		evt := new(events.RevisionCreate)
 		evt.ID = msg.ID
 
