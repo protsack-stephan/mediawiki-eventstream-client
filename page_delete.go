@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/protsack-stephan/mediawiki-eventstream-client/client"
 	"github.com/protsack-stephan/mediawiki-eventstream-client/events"
+	"github.com/protsack-stephan/mediawiki-eventstream-client/subscriber"
 )
 
-// PageDelete stream from mediawiki
-func PageDelete(ctx context.Context, handler func(evt *events.PageDelete)) error {
-	return client.Subscribe(ctx, pageDelete, func(msg *client.Event) {
+func pageDelete(ctx context.Context, url string, handler func(evt *events.PageDelete)) error {
+	return subscriber.Subscribe(ctx, url, func(msg *subscriber.Event) {
 		evt := new(events.PageDelete)
 		evt.ID = msg.ID
 
@@ -19,4 +18,9 @@ func PageDelete(ctx context.Context, handler func(evt *events.PageDelete)) error
 			handler(evt)
 		}
 	})
+}
+
+// PageDelete stream from mediawiki
+func PageDelete(ctx context.Context, handler func(evt *events.PageDelete)) error {
+	return pageDelete(ctx, pageDeleteURL, handler)
 }

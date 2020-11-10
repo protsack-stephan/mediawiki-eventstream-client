@@ -1,8 +1,8 @@
 package events
 
-import "github.com/protsack-stephan/mediawiki-eventstream-client/client"
+import "github.com/protsack-stephan/mediawiki-eventstream-client/subscriber"
 
 type baseEvent struct {
-	ID   []client.Info
+	ID   []subscriber.Info
 	Data interface{}
 }

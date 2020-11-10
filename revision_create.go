@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/protsack-stephan/mediawiki-eventstream-client/client"
 	"github.com/protsack-stephan/mediawiki-eventstream-client/events"
+	"github.com/protsack-stephan/mediawiki-eventstream-client/subscriber"
 )
 
-// RevisionCreate stream from mediawiki
-func RevisionCreate(ctx context.Context, handler func(evt *events.RevisionCreate)) error {
-	return client.Subscribe(ctx, revisionCreate, func(msg *client.Event) {
+func revisionCreate(ctx context.Context, url string, handler func(evt *events.RevisionCreate)) error {
+	return subscriber.Subscribe(ctx, url, func(msg *subscriber.Event) {
 		evt := new(events.RevisionCreate)
 		evt.ID = msg.ID
 
@@ -19,4 +18,9 @@ func RevisionCreate(ctx context.Context, handler func(evt *events.RevisionCreate
 			handler(evt)
 		}
 	})
+}
+
+// RevisionCreate stream from mediawiki
+func RevisionCreate(ctx context.Context, handler func(evt *events.RevisionCreate)) error {
+	return revisionCreate(ctx, revisionCreateURL, handler)
 }

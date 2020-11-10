@@ -11,8 +11,9 @@ import (
 
 func main() {
 	ctx := context.Background()
+	client := eventstream.NewClient()
 
-	err := eventstream.RevisionScore(ctx, func(evt *events.RevisionScore) {
+	err := client.RevisionScore(ctx, func(evt *events.RevisionScore) {
 		fmt.Println(evt)
 	})
 
