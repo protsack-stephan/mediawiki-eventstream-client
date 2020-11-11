@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	eventstream "github.com/protsack-stephan/mediawiki-eventstream-client"
@@ -10,18 +11,14 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
 	client := eventstream.NewClient()
-	stream := client.PageDelete(ctx, time.Now(), func(evt *events.PageDelete) {
+	stream := client.PageDelete(context.Background(), time.Now(), func(evt *events.PageDelete) {
 		fmt.Println(evt.Data)
 	})
 
-	go func() {
-		time.Sleep(2 * time.Second)
-		cancel()
-	}()
+	err := stream.Exec()
 
-	for err := range stream.Sub() {
-		fmt.Println(err)
+	if err != nil {
+		log.Panic(err)
 	}
 }
