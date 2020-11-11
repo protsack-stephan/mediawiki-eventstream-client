@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	eventstream "github.com/protsack-stephan/mediawiki-eventstream-client"
@@ -16,9 +15,9 @@ func main() {
 		fmt.Println(evt.Data)
 	})
 
-	err := stream.Exec()
+	errs := stream.Sub()
 
-	if err != nil {
-		log.Panic(err)
+	for err := range errs {
+		fmt.Println(err)
 	}
 }
