@@ -12,8 +12,8 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	client := eventstream.NewClient()
-	stream := client.RevisionCreate(ctx, time.Now(), func(evt *events.RevisionCreate) {
-		fmt.Println(evt)
+	stream := client.PageDelete(ctx, time.Now(), func(evt *events.PageDelete) {
+		fmt.Println(evt.Data)
 	})
 
 	go func() {

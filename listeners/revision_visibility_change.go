@@ -18,7 +18,6 @@ func RevisionVisibilityChange(ctx context.Context, url string, since time.Time, 
 		evt.ID = msg.ID
 
 		err := json.Unmarshal(msg.Data, &evt.Data)
-
 		if err == nil {
 			handler(evt)
 		} else {
