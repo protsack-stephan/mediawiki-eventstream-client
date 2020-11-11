@@ -3,21 +3,26 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"time"
 
 	eventstream "github.com/protsack-stephan/mediawiki-eventstream-client"
 	"github.com/protsack-stephan/mediawiki-eventstream-client/events"
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 	client := eventstream.NewClient()
 
-	err := client.RevisionScore(ctx, func(evt *events.RevisionScore) {
+	errs := client.RevisionCreateKeepAlive(ctx, time.Now(), func(evt *events.RevisionCreate) {
 		fmt.Println(evt)
 	})
 
-	if err != nil {
-		log.Panic(err)
+	go func() {
+		time.Sleep(2 * time.Second)
+		cancel()
+	}()
+
+	for err := range errs {
+		fmt.Println(err)
 	}
 }
