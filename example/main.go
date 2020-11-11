@@ -12,8 +12,7 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	client := eventstream.NewClient()
-
-	errs := client.RevisionCreateKeepAlive(ctx, time.Now(), func(evt *events.RevisionCreate) {
+	stream := client.RevisionCreate(ctx, time.Now(), func(evt *events.RevisionCreate) {
 		fmt.Println(evt)
 	})
 
@@ -22,7 +21,7 @@ func main() {
 		cancel()
 	}()
 
-	for err := range errs {
+	for err := range stream.Sub() {
 		fmt.Println(err)
 	}
 }

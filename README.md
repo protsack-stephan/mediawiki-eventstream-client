@@ -1,24 +1,22 @@
 # Mediawiki events stream client for Go
 
-Mediawiki server side events package.
+Mediawiki server side events client package.
 
 Usage example:
 ```go
-ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+ctx, cancel := context.WithCancel(context.Background())
+client := eventstream.NewClient()
+
+stream := client.RevisionCreate(ctx, time.Now(), func(evt *events.RevisionCreate) {
+	fmt.Println(evt)
+})
 
 go func() {
-	err := eventstream.RevisionScore(ctx, func(evt *events.RevisionScore) {
-		fmt.Println(evt)
-	})
-
-	if err != nil {
-		log.Panic(err)
-	}
+	time.Sleep(2 * time.Second)
+	cancel()
 }()
 
-select {
-case <-ctx.Done():
-	fmt.Println("done")
-	break
+for err := range stream.Sub() {
+	fmt.Println(err)
 }
 ```

@@ -24,12 +24,12 @@ const (
 // NewClient creating new connection client
 func NewClient() *Client {
 	return &Client{
-		ReconnectTime:               reconnectTime,
-		PageDeleteURL:               pageDeleteURL,
-		PageMoveURL:                 pageMoveURL,
-		RevisionCreateURL:           revisionCreateURL,
-		RevisionScoreURL:            revisionScoreURL,
-		RevisionVisibilityChangeURL: revisionVisibilityChangeURL,
+		reconnectTime,
+		pageDeleteURL,
+		pageMoveURL,
+		revisionCreateURL,
+		revisionScoreURL,
+		revisionVisibilityChangeURL,
 	}
 }
 
@@ -44,55 +44,41 @@ type Client struct {
 }
 
 // PageDelete connect to page delete stream
-func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(evt *events.PageDelete)) error {
-	return listeners.PageDelete(ctx, cl.PageDeleteURL, since, handler)
+func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(evt *events.PageDelete)) *Stream {
+	errors := make(chan error)
+	return NewStream(cl.ReconnectTime, errors, func() error {
+		return listeners.PageDelete(ctx, cl.PageDeleteURL, since, handler, errors)
+	})
 }
 
 // PageMove connect to page move stream
-func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(evt *events.PageMove)) error {
-	return listeners.PageMove(ctx, cl.PageMoveURL, since, handler)
+func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(evt *events.PageMove)) *Stream {
+	errors := make(chan error)
+	return NewStream(cl.ReconnectTime, errors, func() error {
+		return listeners.PageMove(ctx, cl.PageMoveURL, since, handler, errors)
+	})
 }
 
 // RevisionCreate connect to revision create stream
-func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler func(evt *events.RevisionCreate)) error {
-	return listeners.RevisionCreate(ctx, cl.RevisionCreateURL, since, handler)
-}
-
-// RevisionCreateKeepAlive connect to revision create stream with instant reconnect
-func (cl *Client) RevisionCreateKeepAlive(ctx context.Context, since time.Time, handler func(evt *events.RevisionCreate)) chan error {
+func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler func(evt *events.RevisionCreate)) *Stream {
 	errors := make(chan error)
-
-	go cl.keepAlive(func() error {
-		return cl.RevisionCreate(ctx, since, handler)
-	}, errors)
-
-	return errors
+	return NewStream(cl.ReconnectTime, errors, func() error {
+		return listeners.RevisionCreate(ctx, cl.RevisionCreateURL, since, handler, errors)
+	})
 }
 
 // RevisionScore connect to revision score stream
-func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler func(evt *events.RevisionScore)) error {
-	return listeners.RevisionScore(ctx, cl.RevisionScoreURL, since, handler)
+func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler func(evt *events.RevisionScore)) *Stream {
+	errors := make(chan error)
+	return NewStream(cl.ReconnectTime, errors, func() error {
+		return listeners.RevisionScore(ctx, cl.RevisionScoreURL, since, handler, errors)
+	})
 }
 
 // RevisionVisibilityChange connext to revision visibility change stream
-func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time, handler func(evt *events.RevisionVisibilityChange)) error {
-	return listeners.RevisionVisibilityChange(ctx, cl.RevisionVisibilityChangeURL, since, handler)
-}
-
-func (cl *Client) keepAlive(cb func() error, errors chan error) {
-	if cl.ReconnectTime == 0 {
-		cl.ReconnectTime = reconnectTime
-	}
-
-	for {
-		err := cb()
-
-		errors <- err
-		if err == context.Canceled {
-			close(errors)
-			break
-		} else {
-			time.Sleep(cl.ReconnectTime)
-		}
-	}
+func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time, handler func(evt *events.RevisionVisibilityChange)) *Stream {
+	errors := make(chan error)
+	return NewStream(cl.ReconnectTime, errors, func() error {
+		return listeners.RevisionVisibilityChange(ctx, cl.RevisionVisibilityChangeURL, since, handler, errors)
+	})
 }
