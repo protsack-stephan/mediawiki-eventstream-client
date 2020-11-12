@@ -11,8 +11,8 @@ import (
 
 func main() {
 	client := eventstream.NewClient()
-	stream := client.PageDelete(context.Background(), time.Now(), func(evt *events.PageDelete) {
-		fmt.Println(evt.Data)
+	stream := client.RevisionVisibilityChange(context.Background(), time.Now(), func(evt *events.RevisionVisibilityChange) {
+		fmt.Println(evt.ID)
 	})
 
 	errs := stream.Sub()
