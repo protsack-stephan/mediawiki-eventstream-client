@@ -1,9 +1,8 @@
 package eventstream
 
 import (
+	"context"
 	"time"
-
-	"github.com/protsack-stephan/mediawiki-eventstream-client/utils"
 )
 
 // NewStream create new result instance
@@ -33,6 +32,20 @@ func (str *Stream) Exec() error {
 
 // Sub non blocking execution stream
 func (str *Stream) Sub() chan error {
-	go utils.KeepAlive(str.handler, str.reconnectTime, str.errors)
+	go str.keepAlive()
 	return str.errors
+}
+
+func (str *Stream) keepAlive() {
+	for {
+		err := str.handler()
+
+		str.errors <- err
+		if err == context.Canceled {
+			close(str.errors)
+			break
+		} else {
+			time.Sleep(str.reconnectTime)
+		}
+	}
 }
