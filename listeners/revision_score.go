@@ -11,7 +11,7 @@ import (
 )
 
 // RevisionScore event listener
-func RevisionScore(ctx context.Context, url string, since time.Time, handler func(evt *events.RevisionScore)) error {
+func RevisionScore(ctx context.Context, url string, since time.Time, handler func(evt *events.RevisionScore), errors ...chan error) error {
 	return subscriber.Subscribe(ctx, utils.FormatURL(url, since), func(msg *subscriber.Event) {
 		evt := new(events.RevisionScore)
 		evt.ID = msg.ID
@@ -19,6 +19,10 @@ func RevisionScore(ctx context.Context, url string, since time.Time, handler fun
 		err := json.Unmarshal(msg.Data, &evt.Data)
 		if err == nil {
 			handler(evt)
+		} else {
+			for _, errChanel := range errors {
+				errChanel <- err
+			}
 		}
 	})
 }

@@ -11,7 +11,7 @@ import (
 )
 
 // PageMove event listener
-func PageMove(ctx context.Context, url string, since time.Time, handler func(evt *events.PageMove)) error {
+func PageMove(ctx context.Context, url string, since time.Time, handler func(evt *events.PageMove), errors ...chan error) error {
 	return subscriber.Subscribe(ctx, utils.FormatURL(url, since), func(msg *subscriber.Event) {
 		evt := new(events.PageMove)
 		evt.ID = msg.ID
@@ -19,6 +19,10 @@ func PageMove(ctx context.Context, url string, since time.Time, handler func(evt
 		err := json.Unmarshal(msg.Data, &evt.Data)
 		if err == nil {
 			handler(evt)
+		} else {
+			for _, errChanel := range errors {
+				errChanel <- err
+			}
 		}
 	})
 }

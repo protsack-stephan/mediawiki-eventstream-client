@@ -12,7 +12,7 @@ import (
 )
 
 // RevisionVisibilityChange event listener
-func RevisionVisibilityChange(ctx context.Context, url string, since time.Time, handler func(evt *events.RevisionVisibilityChange)) error {
+func RevisionVisibilityChange(ctx context.Context, url string, since time.Time, handler func(evt *events.RevisionVisibilityChange), errors ...chan error) error {
 	return subscriber.Subscribe(ctx, utils.FormatURL(url, since), func(msg *subscriber.Event) {
 		evt := new(events.RevisionVisibilityChange)
 		evt.ID = msg.ID
@@ -20,6 +20,10 @@ func RevisionVisibilityChange(ctx context.Context, url string, since time.Time, 
 		err := json.Unmarshal(msg.Data, &evt.Data)
 		if err == nil {
 			handler(evt)
+		} else {
+			for _, errChanel := range errors {
+				errChanel <- err
+			}
 		}
 	})
 }

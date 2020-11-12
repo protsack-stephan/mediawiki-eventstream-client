@@ -10,17 +10,12 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
 	client := eventstream.NewClient()
-
-	errs := client.RevisionCreateKeepAlive(ctx, time.Now(), func(evt *events.RevisionCreate) {
-		fmt.Println(evt)
+	stream := client.PageDelete(context.Background(), time.Now(), func(evt *events.PageDelete) {
+		fmt.Println(evt.Data)
 	})
 
-	go func() {
-		time.Sleep(2 * time.Second)
-		cancel()
-	}()
+	errs := stream.Sub()
 
 	for err := range errs {
 		fmt.Println(err)
