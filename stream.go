@@ -7,7 +7,7 @@ import (
 )
 
 // NewStream create new result instance
-func NewStream(reconnectTime time.Duration, errors chan error, subscriber func() error) *Stream {
+func NewStream(reconnectTime time.Duration, errors chan error, handler func() error) *Stream {
 	if reconnectTime == 0 {
 		reconnectTime = time.Second * 1
 	}
@@ -15,7 +15,7 @@ func NewStream(reconnectTime time.Duration, errors chan error, subscriber func()
 	return &Stream{
 		reconnectTime,
 		errors,
-		subscriber,
+		handler,
 	}
 }
 
@@ -23,16 +23,16 @@ func NewStream(reconnectTime time.Duration, errors chan error, subscriber func()
 type Stream struct {
 	reconnectTime time.Duration
 	errors        chan error
-	subscriber    func() error
+	handler       func() error
 }
 
 // Exec blocking execution stream
 func (str *Stream) Exec() error {
-	return str.subscriber()
+	return str.handler()
 }
 
 // Sub non blocking execution stream
 func (str *Stream) Sub() chan error {
-	go utils.KeepAlive(str.subscriber, str.reconnectTime, str.errors)
+	go utils.KeepAlive(str.handler, str.reconnectTime, str.errors)
 	return str.errors
 }
