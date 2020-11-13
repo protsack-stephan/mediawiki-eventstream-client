@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// Info for the topic
-type Info struct {
+// Meta for the topic
+type Meta struct {
 	Topic     string `json:"topic"`
 	Partition int    `json:"partition"`
 	Timestamp int    `json:"timestamp"`
@@ -16,7 +16,7 @@ type Info struct {
 
 // Event streams sse eevent
 type Event struct {
-	ID   []Info
+	ID   []Meta
 	Data []byte
 }
 

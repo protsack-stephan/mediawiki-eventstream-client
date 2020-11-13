@@ -11,8 +11,8 @@ import (
 
 func main() {
 	client := eventstream.NewClient()
-	stream := client.RevisionVisibilityChange(context.Background(), time.Now(), func(evt *events.RevisionVisibilityChange) {
-		fmt.Println(evt.ID)
+	stream := client.RevisionCreate(context.Background(), time.Now(), func(evt *events.RevisionCreate) {
+		fmt.Println(evt.Data.Meta.Dt)
 	})
 
 	errs := stream.Sub()

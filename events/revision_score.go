@@ -6,15 +6,7 @@ import "time"
 type RevisionScore struct {
 	baseEvent
 	Data struct {
-		Schema         string    `json:"$schema"`
-		Meta           Meta      `json:"meta"`
-		Database       string    `json:"database"`
-		PageID         int       `json:"page_id"`
-		PageTitle      string    `json:"page_title"`
-		PageNamespace  int       `json:"page_namespace"`
-		PageIsRedirect bool      `json:"page_is_redirect"`
-		Performer      Performer `json:"performer"`
-		RevID          int       `json:"rev_id"`
+		baseData
 		RevParentID    int       `json:"rev_parent_id"`
 		RevTimestamp   time.Time `json:"rev_timestamp"`
 		Scores         struct {
