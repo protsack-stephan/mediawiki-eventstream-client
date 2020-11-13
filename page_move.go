@@ -1,8 +1,10 @@
 package eventstream
 
+import "encoding/json"
+
 // PageMove event scheme struct
 type PageMove struct {
-	baseEvent
+	baseSchema
 	Data struct {
 		baseData
 		PriorState struct {
@@ -13,4 +15,9 @@ type PageMove struct {
 		Comment       string `json:"comment"`
 		Parsedcomment string `json:"parsedcomment"`
 	}
+}
+
+func (pm *PageMove) unmarshal(evt *Event) error {
+	pm.ID = evt.ID
+	return json.Unmarshal(evt.Data, &pm.Data)
 }

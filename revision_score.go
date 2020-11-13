@@ -1,10 +1,13 @@
 package eventstream
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // RevisionScore event scheme struct
 type RevisionScore struct {
-	baseEvent
+	baseSchema
 	Data struct {
 		baseData
 		RevParentID  int       `json:"rev_parent_id"`
@@ -204,4 +207,9 @@ type RevisionScore struct {
 			} `json:"reverted"`
 		} `json:"scores"`
 	}
+}
+
+func (rs *RevisionScore) unmarshal(evt *Event) error {
+	rs.ID = evt.ID
+	return json.Unmarshal(evt.Data, &rs.Data)
 }

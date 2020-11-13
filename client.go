@@ -2,7 +2,6 @@ package eventstream
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 )
 
@@ -48,15 +47,8 @@ func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.PageDeleteURL, store.getSince(), func(msg *Event) {
 			evt := new(PageDelete)
-			evt.ID = msg.ID
-			err := json.Unmarshal(msg.Data, &evt.Data)
-
-			if err == nil {
-				store.setSince(evt.Data.Meta.Dt)
-				handler(evt)
-			} else {
-				store.setError(err)
-			}
+			parseSchema(evt, msg, store)
+			handler(evt)
 		})
 	})
 }
@@ -68,15 +60,8 @@ func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(ev
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.PageMoveURL, store.getSince(), func(msg *Event) {
 			evt := new(PageMove)
-			evt.ID = msg.ID
-			err := json.Unmarshal(msg.Data, &evt.Data)
-
-			if err == nil {
-				store.setSince(evt.Data.Meta.Dt)
-				handler(evt)
-			} else {
-				store.setError(err)
-			}
+			parseSchema(evt, msg, store)
+			handler(evt)
 		})
 	})
 }
@@ -88,15 +73,8 @@ func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler f
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.RevisionCreateURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionCreate)
-			evt.ID = msg.ID
-			err := json.Unmarshal(msg.Data, &evt.Data)
-
-			if err == nil {
-				store.setSince(evt.Data.Meta.Dt)
-				handler(evt)
-			} else {
-				store.setError(err)
-			}
+			parseSchema(evt, msg, store)
+			handler(evt)
 		})
 	})
 }
@@ -108,15 +86,8 @@ func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler fu
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.RevisionScoreURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionScore)
-			evt.ID = msg.ID
-			err := json.Unmarshal(msg.Data, &evt.Data)
-
-			if err == nil {
-				store.setSince(evt.Data.Meta.Dt)
-				handler(evt)
-			} else {
-				store.setError(err)
-			}
+			parseSchema(evt, msg, store)
+			handler(evt)
 		})
 	})
 }
@@ -128,15 +99,8 @@ func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time,
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.RevisionVisibilityChangeURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionVisibilityChange)
-			evt.ID = msg.ID
-			err := json.Unmarshal(msg.Data, &evt.Data)
-
-			if err == nil {
-				store.setSince(evt.Data.Meta.Dt)
-				handler(evt)
-			} else {
-				store.setError(err)
-			}
+			parseSchema(evt, msg, store)
+			handler(evt)
 		})
 	})
 }

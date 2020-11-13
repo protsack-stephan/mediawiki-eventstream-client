@@ -1,11 +1,8 @@
 package eventstream
 
-type baseEvent struct {
-	ID   []Info
-	Data struct {
-		baseData
-	}
-}
+import (
+	"time"
+)
 
 type baseData struct {
 	Schema         string    `json:"$schema"`
@@ -17,4 +14,15 @@ type baseData struct {
 	PageNamespace  int       `json:"page_namespace"`
 	PageIsRedirect bool      `json:"page_is_redirect"`
 	RevID          int       `json:"rev_id"`
+}
+
+type baseSchema struct {
+	ID   []Info
+	Data struct {
+		baseData
+	}
+}
+
+func (bs *baseSchema) timestamp() time.Time {
+	return bs.Data.Meta.Dt
 }
