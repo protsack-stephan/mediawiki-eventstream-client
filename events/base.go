@@ -14,7 +14,7 @@ type baseEvent struct {
 }
 
 type baseData struct {
-	Schema         string    `json:"schema"`
+	Schema         string    `json:"$schema"`
 	Database       string    `json:"database"`
 	Meta           Meta      `json:"meta"`
 	Performer      Performer `json:"performer"`
