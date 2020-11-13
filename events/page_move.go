@@ -5,7 +5,7 @@ type PageMove struct {
 	baseEvent
 	Data struct {
 		baseData
-		PriorState     struct {
+		PriorState struct {
 			PageTitle     string `json:"page_title"`
 			PageNamespace int    `json:"page_namespace"`
 			RevID         int    `json:"rev_id"`

@@ -11,7 +11,7 @@ import (
 
 const baseURL = "https://stream.wikimedia.org/v2/stream/"
 
-const reconnectTime = time.Second * 1
+const backoffTime = time.Second * 1
 
 // All the available streams
 const (
@@ -25,7 +25,7 @@ const (
 // NewClient creating new connection client
 func NewClient() *Client {
 	return &Client{
-		reconnectTime,
+		backoffTime,
 		pageDeleteURL,
 		pageMoveURL,
 		revisionCreateURL,
@@ -36,7 +36,7 @@ func NewClient() *Client {
 
 // Client request client
 type Client struct {
-	ReconnectTime               time.Duration
+	BackoffTime                 time.Duration
 	PageDeleteURL               string
 	PageMoveURL                 string
 	RevisionCreateURL           string
@@ -46,18 +46,19 @@ type Client struct {
 
 // PageDelete connect to page delete stream
 func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(evt *events.PageDelete)) *Stream {
-	errs := make(chan error)
+	store := newStorage(since, cl.BackoffTime)
 
-	return NewStream(cl.ReconnectTime, errs, func() error {
-		return subscriber.Subscribe(ctx, cl.PageDeleteURL, since, func(msg *subscriber.Event) {
+	return NewStream(store, func(since time.Time) error {
+		return subscriber.Subscribe(ctx, cl.PageDeleteURL, store.getSince(), func(msg *subscriber.Event) {
 			evt := new(events.PageDelete)
 			evt.ID = msg.ID
 			err := json.Unmarshal(msg.Data, &evt.Data)
 
 			if err == nil {
+				store.setSince(evt.Data.Meta.Dt)
 				handler(evt)
 			} else {
-				errs <- err
+				store.setError(err)
 			}
 		})
 	})
@@ -65,18 +66,19 @@ func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(
 
 // PageMove connect to page move stream
 func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(evt *events.PageMove)) *Stream {
-	errs := make(chan error)
+	store := newStorage(since, cl.BackoffTime)
 
-	return NewStream(cl.ReconnectTime, errs, func() error {
-		return subscriber.Subscribe(ctx, cl.PageMoveURL, since, func(msg *subscriber.Event) {
+	return NewStream(store, func(since time.Time) error {
+		return subscriber.Subscribe(ctx, cl.PageMoveURL, store.getSince(), func(msg *subscriber.Event) {
 			evt := new(events.PageMove)
 			evt.ID = msg.ID
 			err := json.Unmarshal(msg.Data, &evt.Data)
 
 			if err == nil {
+				store.setSince(evt.Data.Meta.Dt)
 				handler(evt)
 			} else {
-				errs <- err
+				store.setError(err)
 			}
 		})
 	})
@@ -84,18 +86,19 @@ func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(ev
 
 // RevisionCreate connect to revision create stream
 func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler func(evt *events.RevisionCreate)) *Stream {
-	errs := make(chan error)
+	store := newStorage(since, cl.BackoffTime)
 
-	return NewStream(cl.ReconnectTime, errs, func() error {
-		return subscriber.Subscribe(ctx, cl.RevisionCreateURL, since, func(msg *subscriber.Event) {
+	return NewStream(store, func(since time.Time) error {
+		return subscriber.Subscribe(ctx, cl.RevisionCreateURL, store.getSince(), func(msg *subscriber.Event) {
 			evt := new(events.RevisionCreate)
 			evt.ID = msg.ID
 			err := json.Unmarshal(msg.Data, &evt.Data)
 
 			if err == nil {
+				store.setSince(evt.Data.Meta.Dt)
 				handler(evt)
 			} else {
-				errs <- err
+				store.setError(err)
 			}
 		})
 	})
@@ -103,18 +106,19 @@ func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler f
 
 // RevisionScore connect to revision score stream
 func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler func(evt *events.RevisionScore)) *Stream {
-	errs := make(chan error)
+	store := newStorage(since, cl.BackoffTime)
 
-	return NewStream(cl.ReconnectTime, errs, func() error {
-		return subscriber.Subscribe(ctx, cl.RevisionScoreURL, since, func(msg *subscriber.Event) {
+	return NewStream(store, func(since time.Time) error {
+		return subscriber.Subscribe(ctx, cl.RevisionScoreURL, store.getSince(), func(msg *subscriber.Event) {
 			evt := new(events.RevisionScore)
 			evt.ID = msg.ID
 			err := json.Unmarshal(msg.Data, &evt.Data)
 
 			if err == nil {
+				store.setSince(evt.Data.Meta.Dt)
 				handler(evt)
 			} else {
-				errs <- err
+				store.setError(err)
 			}
 		})
 	})
@@ -122,18 +126,19 @@ func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler fu
 
 // RevisionVisibilityChange connext to revision visibility change stream
 func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time, handler func(evt *events.RevisionVisibilityChange)) *Stream {
-	errs := make(chan error)
+	store := newStorage(since, cl.BackoffTime)
 
-	return NewStream(cl.ReconnectTime, errs, func() error {
-		return subscriber.Subscribe(ctx, cl.RevisionVisibilityChangeURL, since, func(msg *subscriber.Event) {
+	return NewStream(store, func(since time.Time) error {
+		return subscriber.Subscribe(ctx, cl.RevisionVisibilityChangeURL, store.getSince(), func(msg *subscriber.Event) {
 			evt := new(events.RevisionVisibilityChange)
 			evt.ID = msg.ID
 			err := json.Unmarshal(msg.Data, &evt.Data)
 
 			if err == nil {
+				store.setSince(evt.Data.Meta.Dt)
 				handler(evt)
 			} else {
-				errs <- err
+				store.setError(err)
 			}
 		})
 	})

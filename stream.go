@@ -6,46 +6,40 @@ import (
 )
 
 // NewStream create new result instance
-func NewStream(reconnectTime time.Duration, errors chan error, handler func() error) *Stream {
-	if reconnectTime == 0 {
-		reconnectTime = time.Second * 1
-	}
-
+func NewStream(store *storage, handler func(since time.Time) error) *Stream {
 	return &Stream{
-		reconnectTime,
-		errors,
+		store,
 		handler,
 	}
 }
 
 // Stream stream execution result
 type Stream struct {
-	reconnectTime time.Duration
-	errors        chan error
-	handler       func() error
+	store   *storage
+	handler func(since time.Time) error
 }
 
 // Exec blocking execution stream
-func (str *Stream) Exec() error {
-	return str.handler()
+func (sm *Stream) Exec() error {
+	return sm.handler(sm.store.getSince())
 }
 
 // Sub non blocking execution stream
-func (str *Stream) Sub() chan error {
-	go str.keepAlive()
-	return str.errors
+func (sm *Stream) Sub() chan error {
+	go sm.keepAlive()
+	return sm.store.getErrors()
 }
 
-func (str *Stream) keepAlive() {
+func (sm *Stream) keepAlive() {
 	for {
-		err := str.handler()
+		err := sm.handler(sm.store.getSince())
+		sm.store.setError(err)
 
-		str.errors <- err
 		if err == context.Canceled {
-			close(str.errors)
-			break
-		} else {
-			time.Sleep(str.reconnectTime)
+			sm.store.closeErrors()
+			return
 		}
+
+		time.Sleep(sm.store.getBackoff())
 	}
 }

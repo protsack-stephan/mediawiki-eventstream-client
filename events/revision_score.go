@@ -7,9 +7,9 @@ type RevisionScore struct {
 	baseEvent
 	Data struct {
 		baseData
-		RevParentID    int       `json:"rev_parent_id"`
-		RevTimestamp   time.Time `json:"rev_timestamp"`
-		Scores         struct {
+		RevParentID  int       `json:"rev_parent_id"`
+		RevTimestamp time.Time `json:"rev_timestamp"`
+		Scores       struct {
 			Articlequality struct {
 				ModelName    string   `json:"model_name"`
 				ModelVersion string   `json:"model_version"`

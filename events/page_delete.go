@@ -5,8 +5,8 @@ type PageDelete struct {
 	baseEvent
 	Data struct {
 		baseData
-		RevCount       int    `json:"rev_count"`
-		Comment        string `json:"comment"`
-		Parsedcomment  string `json:"parsedcomment"`
+		RevCount      int    `json:"rev_count"`
+		Comment       string `json:"comment"`
+		Parsedcomment string `json:"parsedcomment"`
 	}
 }

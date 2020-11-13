@@ -11,13 +11,13 @@ import (
 
 func main() {
 	client := eventstream.NewClient()
-	stream := client.RevisionCreate(context.Background(), time.Now(), func(evt *events.RevisionCreate) {
+
+	stream := client.RevisionVisibilityChange(context.Background(), time.Now().UTC(), func(evt *events.RevisionVisibilityChange) {
+		fmt.Println(evt.Data.Schema)
 		fmt.Println(evt.Data.Meta.Dt)
 	})
 
-	errs := stream.Sub()
-
-	for err := range errs {
+	for err := range stream.Sub() {
 		fmt.Println(err)
 	}
 }
