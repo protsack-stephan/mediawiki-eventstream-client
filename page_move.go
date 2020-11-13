@@ -1,4 +1,4 @@
-package events
+package eventstream
 
 // PageMove event scheme struct
 type PageMove struct {

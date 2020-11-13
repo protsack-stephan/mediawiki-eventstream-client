@@ -1,4 +1,4 @@
-package subscriber
+package eventstream
 
 import (
 	"bufio"
@@ -7,8 +7,7 @@ import (
 	"time"
 )
 
-// Subscribe listen to event stream
-func Subscribe(ctx context.Context, url string, since time.Time, handler func(evt *Event)) error {
+func subscribe(ctx context.Context, url string, since time.Time, handler func(evt *Event)) error {
 	client := &http.Client{}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url+"?"+since.UTC().Format(time.RFC3339), nil)
 

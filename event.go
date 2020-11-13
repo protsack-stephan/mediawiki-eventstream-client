@@ -1,4 +1,4 @@
-package subscriber
+package eventstream
 
 import (
 	"encoding/json"
@@ -6,17 +6,17 @@ import (
 	"strings"
 )
 
-// Meta for the topic
-type Meta struct {
+// Info for the topic
+type Info struct {
 	Topic     string `json:"topic"`
 	Partition int    `json:"partition"`
 	Timestamp int    `json:"timestamp"`
 	Offset    int    `json:"offset"`
 }
 
-// Event streams sse eevent
+// Event streams sse event
 type Event struct {
-	ID   []Meta
+	ID   []Info
 	Data []byte
 }
 
