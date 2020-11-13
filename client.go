@@ -2,10 +2,11 @@ package eventstream
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/protsack-stephan/mediawiki-eventstream-client/events"
-	"github.com/protsack-stephan/mediawiki-eventstream-client/listeners"
+	"github.com/protsack-stephan/mediawiki-eventstream-client/subscriber"
 )
 
 const baseURL = "https://stream.wikimedia.org/v2/stream/"
@@ -46,39 +47,94 @@ type Client struct {
 // PageDelete connect to page delete stream
 func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(evt *events.PageDelete)) *Stream {
 	errs := make(chan error)
+
 	return NewStream(cl.ReconnectTime, errs, func() error {
-		return listeners.PageDelete(ctx, cl.PageDeleteURL, since, handler, errs)
+		return subscriber.Subscribe(ctx, cl.PageDeleteURL, since, func(msg *subscriber.Event) {
+			evt := new(events.PageDelete)
+			evt.ID = msg.ID
+			err := json.Unmarshal(msg.Data, &evt.Data)
+
+			if err == nil {
+				handler(evt)
+			} else {
+				errs <- err
+			}
+		})
 	})
 }
 
 // PageMove connect to page move stream
 func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(evt *events.PageMove)) *Stream {
 	errs := make(chan error)
+
 	return NewStream(cl.ReconnectTime, errs, func() error {
-		return listeners.PageMove(ctx, cl.PageMoveURL, since, handler, errs)
+		return subscriber.Subscribe(ctx, cl.PageMoveURL, since, func(msg *subscriber.Event) {
+			evt := new(events.PageMove)
+			evt.ID = msg.ID
+			err := json.Unmarshal(msg.Data, &evt.Data)
+
+			if err == nil {
+				handler(evt)
+			} else {
+				errs <- err
+			}
+		})
 	})
 }
 
 // RevisionCreate connect to revision create stream
 func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler func(evt *events.RevisionCreate)) *Stream {
 	errs := make(chan error)
+
 	return NewStream(cl.ReconnectTime, errs, func() error {
-		return listeners.RevisionCreate(ctx, cl.RevisionCreateURL, since, handler, errs)
+		return subscriber.Subscribe(ctx, cl.RevisionCreateURL, since, func(msg *subscriber.Event) {
+			evt := new(events.RevisionCreate)
+			evt.ID = msg.ID
+			err := json.Unmarshal(msg.Data, &evt.Data)
+
+			if err == nil {
+				handler(evt)
+			} else {
+				errs <- err
+			}
+		})
 	})
 }
 
 // RevisionScore connect to revision score stream
 func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler func(evt *events.RevisionScore)) *Stream {
 	errs := make(chan error)
+
 	return NewStream(cl.ReconnectTime, errs, func() error {
-		return listeners.RevisionScore(ctx, cl.RevisionScoreURL, since, handler, errs)
+		return subscriber.Subscribe(ctx, cl.RevisionScoreURL, since, func(msg *subscriber.Event) {
+			evt := new(events.RevisionScore)
+			evt.ID = msg.ID
+			err := json.Unmarshal(msg.Data, &evt.Data)
+
+			if err == nil {
+				handler(evt)
+			} else {
+				errs <- err
+			}
+		})
 	})
 }
 
 // RevisionVisibilityChange connext to revision visibility change stream
 func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time, handler func(evt *events.RevisionVisibilityChange)) *Stream {
 	errs := make(chan error)
+
 	return NewStream(cl.ReconnectTime, errs, func() error {
-		return listeners.RevisionVisibilityChange(ctx, cl.RevisionVisibilityChangeURL, since, handler, errs)
+		return subscriber.Subscribe(ctx, cl.RevisionVisibilityChangeURL, since, func(msg *subscriber.Event) {
+			evt := new(events.RevisionVisibilityChange)
+			evt.ID = msg.ID
+			err := json.Unmarshal(msg.Data, &evt.Data)
+
+			if err == nil {
+				handler(evt)
+			} else {
+				errs <- err
+			}
+		})
 	})
 }

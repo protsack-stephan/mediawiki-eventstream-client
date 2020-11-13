@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"context"
 	"net/http"
+	"time"
 )
 
 // Subscribe listen to event stream
-func Subscribe(ctx context.Context, url string, handler func(evt *Event)) error {
+func Subscribe(ctx context.Context, url string, since time.Time, handler func(evt *Event)) error {
 	client := &http.Client{}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url+"?"+since.UTC().Format(time.RFC3339), nil)
 
 	if err != nil {
 		return err

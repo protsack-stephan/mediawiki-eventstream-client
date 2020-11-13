@@ -11,8 +11,8 @@ import (
 
 func main() {
 	client := eventstream.NewClient()
-	stream := client.PageDelete(context.Background(), time.Now(), func(evt *events.PageDelete) {
-		fmt.Println(evt.Data)
+	stream := client.RevisionCreate(context.Background(), time.Now(), func(evt *events.RevisionCreate) {
+		fmt.Println(evt.Data.Meta.Dt)
 	})
 
 	errs := stream.Sub()
