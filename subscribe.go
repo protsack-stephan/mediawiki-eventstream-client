@@ -7,8 +7,7 @@ import (
 	"time"
 )
 
-func subscribe(ctx context.Context, url string, since time.Time, handler func(evt *Event)) error {
-	client := &http.Client{}
+func subscribe(ctx context.Context, client *http.Client, url string, since time.Time, handler func(evt *Event)) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url+"?"+since.UTC().Format(time.RFC3339), nil)
 
 	if err != nil {
