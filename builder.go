@@ -17,6 +17,12 @@ type ClientBuilder struct {
 	client *Client
 }
 
+// URL set base URL for the client
+func (cb *ClientBuilder) URL(url string) *ClientBuilder {
+	cb.client.url = url
+	return cb
+}
+
 // HTTPClient provide custom http client
 func (cb *ClientBuilder) HTTPClient(client *http.Client) *ClientBuilder {
 	cb.client.httpClient = client
