@@ -48,7 +48,7 @@ func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, url+cl.options.PageDeleteURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.PageDeleteURL, store.getSince(), func(msg *Event) {
 			evt := new(PageDelete)
 			parseSchema(evt, msg, store)
 			handler(evt)
@@ -61,7 +61,7 @@ func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(ev
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, url+cl.options.PageMoveURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.PageMoveURL, store.getSince(), func(msg *Event) {
 			evt := new(PageMove)
 			parseSchema(evt, msg, store)
 			handler(evt)
@@ -74,7 +74,7 @@ func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler f
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, url+cl.options.RevisionCreateURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.RevisionCreateURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionCreate)
 			parseSchema(evt, msg, store)
 			handler(evt)
@@ -87,7 +87,7 @@ func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler fu
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, url+cl.options.RevisionScoreURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.RevisionScoreURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionScore)
 			parseSchema(evt, msg, store)
 			handler(evt)
@@ -100,7 +100,7 @@ func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time,
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, url+cl.options.RevisionVisibilityChangeURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.RevisionVisibilityChangeURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionVisibilityChange)
 			parseSchema(evt, msg, store)
 			handler(evt)
