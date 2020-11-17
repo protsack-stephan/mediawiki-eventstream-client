@@ -6,15 +6,15 @@ import (
 	"time"
 
 	eventstream "github.com/protsack-stephan/mediawiki-eventstream-client"
-	"github.com/protsack-stephan/mediawiki-eventstream-client/events"
 )
 
 func main() {
 	client := eventstream.NewClient()
 
-	stream := client.RevisionVisibilityChange(context.Background(), time.Now().UTC(), func(evt *events.RevisionVisibilityChange) {
+	stream := client.RevisionScore(context.Background(), time.Now().UTC(), func(evt *eventstream.RevisionScore) {
 		fmt.Println(evt.Data.Schema)
 		fmt.Println(evt.Data.Meta.Dt)
+		fmt.Println(evt.Data.Scores.Damaging)
 	})
 
 	for err := range stream.Sub() {

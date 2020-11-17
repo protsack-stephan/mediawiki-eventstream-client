@@ -1,7 +1,6 @@
 package eventstream
 
 import (
-	"context"
 	"time"
 )
 
@@ -26,20 +25,6 @@ func (sm *Stream) Exec() error {
 
 // Sub non blocking execution stream
 func (sm *Stream) Sub() chan error {
-	go sm.keepAlive()
+	go keepAlive(sm.handler, sm.store)
 	return sm.store.getErrors()
-}
-
-func (sm *Stream) keepAlive() {
-	for {
-		err := sm.handler(sm.store.getSince())
-		sm.store.setError(err)
-
-		if err == context.Canceled {
-			sm.store.closeErrors()
-			return
-		}
-
-		time.Sleep(sm.store.getBackoff())
-	}
 }

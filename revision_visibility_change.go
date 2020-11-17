@@ -1,10 +1,13 @@
-package events
+package eventstream
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // RevisionVisibilityChange event scheme struct
 type RevisionVisibilityChange struct {
-	baseEvent
+	baseSchema
 	Data struct {
 		baseData
 		RevTimestamp     time.Time `json:"rev_timestamp"`
@@ -29,4 +32,9 @@ type RevisionVisibilityChange struct {
 			} `json:"visibility"`
 		} `json:"prior_state"`
 	}
+}
+
+func (rvc *RevisionVisibilityChange) unmarshal(evt *Event) error {
+	rvc.ID = evt.ID
+	return json.Unmarshal(evt.Data, &rvc.Data)
 }
