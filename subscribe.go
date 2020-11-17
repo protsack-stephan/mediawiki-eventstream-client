@@ -8,7 +8,7 @@ import (
 )
 
 func subscribe(ctx context.Context, client *http.Client, url string, since time.Time, handler func(evt *Event)) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url+"?"+since.UTC().Format(time.RFC3339), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url+"?since="+since.UTC().Format(time.RFC3339), nil)
 
 	if err != nil {
 		return err
