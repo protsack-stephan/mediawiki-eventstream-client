@@ -6,22 +6,23 @@ import (
 	"time"
 )
 
-const baseURL = "https://stream.wikimedia.org/v2/stream/"
+const url = "https://stream.wikimedia.org"
 
 const backoffTime = time.Second * 1
 
 // All the available streams
 const (
-	pageDeleteURL               = baseURL + "page-delete"
-	pageMoveURL                 = baseURL + "page-move"
-	revisionCreateURL           = baseURL + "revision-create"
-	revisionScoreURL            = baseURL + "revision-score"
-	revisionVisibilityChangeURL = baseURL + "revision-visibility-change"
+	pageDeleteURL               = "/v2/stream/page-delete"
+	pageMoveURL                 = "/v2/stream/page-move"
+	revisionCreateURL           = "/v2/stream/revision-create"
+	revisionScoreURL            = "/v2/stream/revision-score"
+	revisionVisibilityChangeURL = "/v2/stream/revision-visibility-change"
 )
 
 // NewClient creating new connection client
 func NewClient() *Client {
 	return &Client{
+		url,
 		new(http.Client),
 		backoffTime,
 		&Options{
@@ -36,6 +37,7 @@ func NewClient() *Client {
 
 // Client request client
 type Client struct {
+	url         string
 	httpClient  *http.Client
 	backoffTime time.Duration
 	options     *Options
@@ -46,7 +48,7 @@ func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, cl.options.PageDeleteURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.PageDeleteURL, store.getSince(), func(msg *Event) {
 			evt := new(PageDelete)
 			parseSchema(evt, msg, store)
 			handler(evt)
@@ -59,7 +61,7 @@ func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(ev
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, cl.options.PageMoveURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.PageMoveURL, store.getSince(), func(msg *Event) {
 			evt := new(PageMove)
 			parseSchema(evt, msg, store)
 			handler(evt)
@@ -72,7 +74,7 @@ func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler f
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, cl.options.RevisionCreateURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.RevisionCreateURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionCreate)
 			parseSchema(evt, msg, store)
 			handler(evt)
@@ -85,7 +87,7 @@ func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler fu
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, cl.options.RevisionScoreURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.RevisionScoreURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionScore)
 			parseSchema(evt, msg, store)
 			handler(evt)
@@ -98,7 +100,7 @@ func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time,
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
-		return subscribe(ctx, cl.httpClient, cl.options.RevisionVisibilityChangeURL, store.getSince(), func(msg *Event) {
+		return subscribe(ctx, cl.httpClient, cl.url+cl.options.RevisionVisibilityChangeURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionVisibilityChange)
 			parseSchema(evt, msg, store)
 			handler(evt)
