@@ -15,7 +15,6 @@ const storageTestBackoff = time.Millisecond * 1
 func TestStorage(t *testing.T) {
 	thrownErrs := 0
 	caughtErrs := 0
-
 	storage := newStorage(storageTestSince, storageTestBackoff)
 
 	assert.NotNil(t, storage.mu)
@@ -41,5 +40,6 @@ func TestStorage(t *testing.T) {
 
 	since := time.Now().Add(2 * time.Hour)
 	storage.setSince(since)
+	assert.Equal(t, since, storage.since)
 	assert.Equal(t, since, storage.getSince())
 }
