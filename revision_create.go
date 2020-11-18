@@ -25,6 +25,10 @@ type RevisionCreate struct {
 	}
 }
 
+func (rc *RevisionCreate) timestamp() time.Time {
+	return rc.Data.Meta.Dt
+}
+
 func (rc *RevisionCreate) unmarshal(evt *Event) error {
 	rc.ID = evt.ID
 	return json.Unmarshal(evt.Data, &rc.Data)

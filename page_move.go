@@ -1,6 +1,9 @@
 package eventstream
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 // PageMove event scheme struct
 type PageMove struct {
@@ -15,6 +18,10 @@ type PageMove struct {
 		Comment       string `json:"comment"`
 		Parsedcomment string `json:"parsedcomment"`
 	}
+}
+
+func (pm *PageMove) timestamp() time.Time {
+	return pm.Data.Meta.Dt
 }
 
 func (pm *PageMove) unmarshal(evt *Event) error {

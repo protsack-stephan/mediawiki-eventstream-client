@@ -2,6 +2,7 @@ package eventstream
 
 import (
 	"context"
+	"errors"
 	"time"
 )
 
@@ -10,7 +11,7 @@ func keepAlive(handler func(since time.Time) error, store *storage) {
 		err := handler(store.getSince())
 		store.setError(err)
 
-		if err == context.Canceled {
+		if errors.Is(err, context.Canceled) {
 			store.closeErrors()
 			return
 		}

@@ -209,6 +209,10 @@ type RevisionScore struct {
 	}
 }
 
+func (rs *RevisionScore) timestamp() time.Time {
+	return rs.Data.Meta.Dt
+}
+
 func (rs *RevisionScore) unmarshal(evt *Event) error {
 	rs.ID = evt.ID
 	return json.Unmarshal(evt.Data, &rs.Data)
