@@ -2,30 +2,32 @@ package eventstream
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
+var keepAliveTestError = errors.New("keep alive error")
+
 const keepAliveTestBackoffTime = time.Millisecond * 1
 const keepAliveNumberOfErrors = 5
 
 func TestKeepAlive(t *testing.T) {
-	storageTime := time.Now().UTC()
+	storageSince := time.Now().UTC()
 	thrownErrs := 0
 	caughtErrs := 0
-	storage := newStorage(storageTime, keepAliveTestBackoffTime)
+	storage := newStorage(storageSince, keepAliveTestBackoffTime)
 
 	assert.NotNil(t, storage)
 
 	handler := func(since time.Time) error {
-		assert.Equal(t, storageTime, since)
+		assert.Equal(t, storageSince, since)
 		thrownErrs++
 
 		if thrownErrs < keepAliveNumberOfErrors {
-			return fmt.Errorf("test error")
+			return keepAliveTestError
 		}
 
 		return context.Canceled
@@ -39,8 +41,9 @@ func TestKeepAlive(t *testing.T) {
 		if thrownErrs >= keepAliveNumberOfErrors {
 			assert.Equal(t, context.Canceled, err)
 		} else {
-			storageTime = storageTime.Add(time.Hour * 1)
-			storage.setSince(storageTime)
+			assert.Equal(t, keepAliveTestError, err)
+			storageSince = storageSince.Add(time.Hour * 1)
+			storage.setSince(storageSince)
 		}
 	}
 
