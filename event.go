@@ -33,6 +33,7 @@ func (evt *Event) SetID(body string) error {
 func (evt *Event) SetData(body string) error {
 	if strings.HasPrefix(body, "data:") {
 		evt.Data = []byte(strings.TrimSpace(strings.TrimPrefix(body, "data:")))
+		return nil
 	}
 
 	return fmt.Errorf("wrong body fromat")
