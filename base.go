@@ -1,9 +1,5 @@
 package eventstream
 
-import (
-	"time"
-)
-
 type baseData struct {
 	Schema         string    `json:"$schema"`
 	Database       string    `json:"database"`
@@ -21,8 +17,4 @@ type baseSchema struct {
 	Data struct {
 		baseData
 	}
-}
-
-func (bs *baseSchema) timestamp() time.Time {
-	return bs.Data.Meta.Dt
 }

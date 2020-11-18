@@ -34,6 +34,10 @@ type RevisionVisibilityChange struct {
 	}
 }
 
+func (rvc *RevisionVisibilityChange) timestamp() time.Time {
+	return rvc.Data.Meta.Dt
+}
+
 func (rvc *RevisionVisibilityChange) unmarshal(evt *Event) error {
 	rvc.ID = evt.ID
 	return json.Unmarshal(evt.Data, &rvc.Data)

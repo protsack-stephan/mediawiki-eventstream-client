@@ -1,6 +1,9 @@
 package eventstream
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 // PageDelete event scheme struct
 type PageDelete struct {
@@ -11,6 +14,10 @@ type PageDelete struct {
 		Comment       string `json:"comment"`
 		Parsedcomment string `json:"parsedcomment"`
 	}
+}
+
+func (pd *PageDelete) timestamp() time.Time {
+	return pd.Data.Meta.Dt
 }
 
 func (pd *PageDelete) unmarshal(evt *Event) error {
