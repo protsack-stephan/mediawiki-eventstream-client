@@ -71,11 +71,34 @@ func TestPageDeleteExec(t *testing.T) {
 		}).
 		Build()
 
+	type msg struct {
+		Topic     string
+		PageTitle string
+		RevID     int
+	}
+
+	expected := map[int]msg{
+		4656021: {
+			Topic:     "eqiad.mediawiki.page-delete",
+			PageTitle: "réduisit",
+			RevID:     22058660,
+		},
+		4656283: {
+			Topic:     "eqiad.mediawiki.page-delete",
+			PageTitle: "récupéreraient",
+			RevID:     22110162,
+		},
+	}
+
 	stream := client.PageDelete(context.Background(), time.Now().UTC(), func(evt *PageDelete) {
-		// fmt.Println(evt)
+		expectedItem := expected[evt.Data.PageID]
+
+		assert.NotNil(t, expectedItem)
+		assert.Equal(t, expectedItem.Topic, evt.ID[0].Topic)
+		assert.Equal(t, expectedItem.PageTitle, evt.Data.PageTitle)
+		assert.Equal(t, expectedItem.RevID, evt.Data.RevID)
 	})
 
-	//# TODO: check properties
 	assert.Equal(t, io.EOF, stream.Exec())
 }
 
