@@ -17,7 +17,7 @@ var pageDeleteTestSince = time.Now().UTC()
 const pageDeleteTestExecURL = "/page-delete-exec"
 const pageDeleteTestSubURL = "/page-delete-sub"
 
-func createPageDeleteServer(ctx context.Context, t *testing.T, since *time.Time) (http.Handler, error) {
+func createPageDeleteServer(t *testing.T, since *time.Time) (http.Handler, error) {
 	router := http.NewServeMux()
 	stubs, err := readStub("page-delete.json")
 
@@ -27,6 +27,7 @@ func createPageDeleteServer(ctx context.Context, t *testing.T, since *time.Time)
 
 	router.HandleFunc(pageDeleteTestExecURL, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, since.Format(time.RFC3339), r.URL.Query().Get("since"))
+
 		f := w.(http.Flusher)
 
 		for _, stub := range stubs {
@@ -37,19 +38,12 @@ func createPageDeleteServer(ctx context.Context, t *testing.T, since *time.Time)
 
 	router.HandleFunc(pageDeleteTestSubURL, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, since.Format(time.RFC3339), r.URL.Query().Get("since"))
-		fmt.Println(r.URL.Query().Get("since"), "srv")
+
 		f := w.(http.Flusher)
 
-		for {
-			if ctx.Err() != nil {
-				break
-			}
-
-			for _, stub := range stubs {
-				time.Sleep(1 * time.Second)
-				w.Write(stub)
-				f.Flush()
-			}
+		for _, stub := range stubs {
+			w.Write(stub)
+			f.Flush()
 		}
 	})
 
@@ -57,8 +51,7 @@ func createPageDeleteServer(ctx context.Context, t *testing.T, since *time.Time)
 }
 
 func TestPageDeleteExec(t *testing.T) {
-	ctx := context.Background()
-	router, err := createPageDeleteServer(ctx, t, &pageDeleteTestSince)
+	router, err := createPageDeleteServer(t, &pageDeleteTestSince)
 	assert.Nil(t, err)
 
 	srv := httptest.NewServer(router)
@@ -104,8 +97,8 @@ func TestPageDeleteExec(t *testing.T) {
 
 func TestPageDeleteSub(t *testing.T) {
 	since := time.Now().UTC()
-	srvCtx, srvCancel := context.WithCancel(context.Background())
-	router, err := createPageDeleteServer(srvCtx, t, &since)
+	router, err := createPageDeleteServer(t, &since)
+
 	assert.Nil(t, err)
 
 	srv := httptest.NewServer(router)
@@ -119,25 +112,24 @@ func TestPageDeleteSub(t *testing.T) {
 		}).
 		Build()
 
+	messagesCount := 1
 	stream := client.PageDelete(clientCtx, pageDeleteTestSince, func(evt *PageDelete) {
 		since = evt.Data.Meta.Dt
-		fmt.Println(evt.Data.Meta.Dt)
+
+		if messagesCount == 4 {
+			clientCancel()
+		}
+
+		messagesCount += 1
 	})
 
 	go func() {
-		time.Sleep(5 * time.Second)
-		srvCancel()
-		srv.CloseClientConnections()
-		time.Sleep(5 * time.Second)
+		time.Sleep(20 * time.Second)
+		t.Errorf("\n%s", "Stream keep-alive does not reconnect to the server")
 		clientCancel()
 	}()
 
 	for err := range stream.Sub() {
-		fmt.Println(err, "test")
+		fmt.Println(fmt.Errorf("ERROR expected: %s", err))
 	}
 }
-
-// 1, 2
-// -> /page-delete-sub -> for -> msg -> 1,2 -> 1,2 -> 1,2
-
-// -> /page-delete-sub -> for -> msg -> 1,2 -> 1,2 -> 1,2
