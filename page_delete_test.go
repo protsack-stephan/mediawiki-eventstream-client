@@ -124,8 +124,8 @@ func TestPageDeleteSub(t *testing.T) {
 	})
 
 	go func() {
-		time.Sleep(20 * time.Second)
-		t.Errorf("\n%s", "Stream keep-alive does not reconnect to the server")
+		time.Sleep(10 * time.Second)
+		t.Errorf("\n%s", "stream keep-alive did not reconnect to the server")
 		clientCancel()
 	}()
 
