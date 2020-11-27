@@ -2,10 +2,10 @@ package eventstream
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 	"time"
 
@@ -16,6 +16,12 @@ var pageDeleteTestSince = time.Now().UTC()
 
 const pageDeleteTestExecURL = "/page-delete-exec"
 const pageDeleteTestSubURL = "/page-delete-sub"
+
+type msg struct {
+	Topic     string
+	PageTitle string
+	RevID     int
+}
 
 func createPageDeleteServer(t *testing.T, since *time.Time) (http.Handler, error) {
 	router := http.NewServeMux()
@@ -51,25 +57,6 @@ func createPageDeleteServer(t *testing.T, since *time.Time) (http.Handler, error
 }
 
 func TestPageDeleteExec(t *testing.T) {
-	router, err := createPageDeleteServer(t, &pageDeleteTestSince)
-	assert.Nil(t, err)
-
-	srv := httptest.NewServer(router)
-	defer srv.Close()
-
-	client := NewBuilder().
-		URL(srv.URL).
-		Options(&Options{
-			PageDeleteURL: pageDeleteTestExecURL,
-		}).
-		Build()
-
-	type msg struct {
-		Topic     string
-		PageTitle string
-		RevID     int
-	}
-
 	expected := map[int]msg{
 		4656021: {
 			Topic:     "eqiad.mediawiki.page-delete",
@@ -82,7 +69,18 @@ func TestPageDeleteExec(t *testing.T) {
 			RevID:     22110162,
 		},
 	}
+	router, err := createPageDeleteServer(t, &pageDeleteTestSince)
+	assert.Nil(t, err)
 
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			PageDeleteURL: pageDeleteTestExecURL,
+		}).
+		Build()
 	stream := client.PageDelete(context.Background(), time.Now().UTC(), func(evt *PageDelete) {
 		expectedItem := expected[evt.Data.PageID]
 
@@ -96,6 +94,12 @@ func TestPageDeleteExec(t *testing.T) {
 }
 
 func TestPageDeleteSub(t *testing.T) {
+	expectedErrors := []string{
+		"EOF",
+		"EOF",
+		"context canceled",
+	}
+
 	since := time.Now().UTC()
 	router, err := createPageDeleteServer(t, &since)
 
@@ -116,20 +120,25 @@ func TestPageDeleteSub(t *testing.T) {
 	stream := client.PageDelete(clientCtx, pageDeleteTestSince, func(evt *PageDelete) {
 		since = evt.Data.Meta.Dt
 
-		if messagesCount == 4 {
-			clientCancel()
+		if messagesCount < 4 {
+			messagesCount += 1
+
+			return
 		}
 
-		messagesCount += 1
+		clientCancel()
 	})
 
-	go func() {
-		time.Sleep(10 * time.Second)
-		t.Errorf("\n%s", "stream keep-alive did not reconnect to the server")
-		clientCancel()
-	}()
-
 	for err := range stream.Sub() {
-		fmt.Println(fmt.Errorf("ERROR expected: %s", err))
+		var expected string
+		expected, expectedErrors = expectedErrors[0], expectedErrors[1:]
+
+		assert.Regexp(t, regexp.MustCompile(expected), err)
+
+		if len(expectedErrors) != 0 {
+			continue
+		}
+
+		assert.Equal(t, messagesCount, 4)
 	}
 }
