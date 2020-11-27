@@ -94,11 +94,7 @@ func TestPageDeleteExec(t *testing.T) {
 }
 
 func TestPageDeleteSub(t *testing.T) {
-	expectedErrors := []string{
-		"EOF",
-		"EOF",
-		"context canceled",
-	}
+	expectedErrors := []string{"EOF", "EOF", "context canceled"}
 
 	since := time.Now().UTC()
 	router, err := createPageDeleteServer(t, &since)
