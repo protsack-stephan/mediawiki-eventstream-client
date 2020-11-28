@@ -66,6 +66,14 @@ func createPageDeleteServer(t *testing.T, since *time.Time) (http.Handler, error
 	return router, nil
 }
 
+func testPageDeleteEvent(t *testing.T, evt *PageDelete) {
+	expected := pageDeleteTestResponse[evt.Data.PageID]
+	assert.NotNil(t, expected)
+	assert.Equal(t, expected.Topic, evt.ID[0].Topic)
+	assert.Equal(t, expected.PageTitle, evt.Data.PageTitle)
+	assert.Equal(t, expected.RevID, evt.Data.RevID)
+}
+
 func TestPageDeleteExec(t *testing.T) {
 	router, err := createPageDeleteServer(t, &pageDeleteTestSince)
 	assert.NoError(t, err)
@@ -81,12 +89,7 @@ func TestPageDeleteExec(t *testing.T) {
 		Build()
 
 	stream := client.PageDelete(context.Background(), time.Now().UTC(), func(evt *PageDelete) {
-		expected := pageDeleteTestResponse[evt.Data.PageID]
-
-		assert.NotNil(t, expected)
-		assert.Equal(t, expected.Topic, evt.ID[0].Topic)
-		assert.Equal(t, expected.PageTitle, evt.Data.PageTitle)
-		assert.Equal(t, expected.RevID, evt.Data.RevID)
+		testPageDeleteEvent(t, evt)
 	})
 
 	assert.Equal(t, io.EOF, stream.Exec())
@@ -109,14 +112,14 @@ func TestPageDeleteSub(t *testing.T) {
 		}).
 		Build()
 
-	msgs := 1
+	msgs := 0
 	stream := client.PageDelete(ctx, pageDeleteTestSince, func(evt *PageDelete) {
+		testPageDeleteEvent(t, evt)
 		since = evt.Data.Meta.Dt
+		msgs++
 
-		if msgs >= 4 {
+		if msgs > 3 {
 			cancel()
-		} else {
-			msgs++
 		}
 	})
 
@@ -126,5 +129,5 @@ func TestPageDeleteSub(t *testing.T) {
 		errs++
 	}
 
-	assert.Equal(t, msgs, 4)
+	assert.Equal(t, 4, msgs)
 }
