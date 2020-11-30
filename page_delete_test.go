@@ -5,23 +5,33 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
+var pageDeleteTestErrors = []error{io.EOF, io.EOF, context.Canceled}
 var pageDeleteTestSince = time.Now().UTC()
-
-const pageDeleteTestExecURL = "/page-delete-exec"
-const pageDeleteTestSubURL = "/page-delete-sub"
-
-type msg struct {
+var pageDeleteTestResponse = map[int]struct {
 	Topic     string
 	PageTitle string
 	RevID     int
+}{
+	4656021: {
+		Topic:     "eqiad.mediawiki.page-delete",
+		PageTitle: "réduisit",
+		RevID:     22058660,
+	},
+	4656283: {
+		Topic:     "eqiad.mediawiki.page-delete",
+		PageTitle: "récupéreraient",
+		RevID:     22110162,
+	},
 }
+
+const pageDeleteTestExecURL = "/page-delete-exec"
+const pageDeleteTestSubURL = "/page-delete-sub"
 
 func createPageDeleteServer(t *testing.T, since *time.Time) (http.Handler, error) {
 	router := http.NewServeMux()
@@ -56,21 +66,17 @@ func createPageDeleteServer(t *testing.T, since *time.Time) (http.Handler, error
 	return router, nil
 }
 
+func testPageDeleteEvent(t *testing.T, evt *PageDelete) {
+	expected := pageDeleteTestResponse[evt.Data.PageID]
+	assert.NotNil(t, expected)
+	assert.Equal(t, expected.Topic, evt.ID[0].Topic)
+	assert.Equal(t, expected.PageTitle, evt.Data.PageTitle)
+	assert.Equal(t, expected.RevID, evt.Data.RevID)
+}
+
 func TestPageDeleteExec(t *testing.T) {
-	expected := map[int]msg{
-		4656021: {
-			Topic:     "eqiad.mediawiki.page-delete",
-			PageTitle: "réduisit",
-			RevID:     22058660,
-		},
-		4656283: {
-			Topic:     "eqiad.mediawiki.page-delete",
-			PageTitle: "récupéreraient",
-			RevID:     22110162,
-		},
-	}
 	router, err := createPageDeleteServer(t, &pageDeleteTestSince)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	srv := httptest.NewServer(router)
 	defer srv.Close()
@@ -81,21 +87,15 @@ func TestPageDeleteExec(t *testing.T) {
 			PageDeleteURL: pageDeleteTestExecURL,
 		}).
 		Build()
-	stream := client.PageDelete(context.Background(), time.Now().UTC(), func(evt *PageDelete) {
-		expectedItem := expected[evt.Data.PageID]
 
-		assert.NotNil(t, expectedItem)
-		assert.Equal(t, expectedItem.Topic, evt.ID[0].Topic)
-		assert.Equal(t, expectedItem.PageTitle, evt.Data.PageTitle)
-		assert.Equal(t, expectedItem.RevID, evt.Data.RevID)
+	stream := client.PageDelete(context.Background(), time.Now().UTC(), func(evt *PageDelete) {
+		testPageDeleteEvent(t, evt)
 	})
 
 	assert.Equal(t, io.EOF, stream.Exec())
 }
 
 func TestPageDeleteSub(t *testing.T) {
-	expectedErrors := []string{"EOF", "EOF", "context canceled"}
-
 	since := time.Now().UTC()
 	router, err := createPageDeleteServer(t, &since)
 
@@ -104,7 +104,7 @@ func TestPageDeleteSub(t *testing.T) {
 	srv := httptest.NewServer(router)
 	defer srv.Close()
 
-	clientCtx, clientCancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	client := NewBuilder().
 		URL(srv.URL).
 		Options(&Options{
@@ -112,29 +112,22 @@ func TestPageDeleteSub(t *testing.T) {
 		}).
 		Build()
 
-	messagesCount := 1
-	stream := client.PageDelete(clientCtx, pageDeleteTestSince, func(evt *PageDelete) {
+	msgs := 0
+	stream := client.PageDelete(ctx, pageDeleteTestSince, func(evt *PageDelete) {
+		testPageDeleteEvent(t, evt)
 		since = evt.Data.Meta.Dt
+		msgs++
 
-		if messagesCount < 4 {
-			messagesCount += 1
-
-			return
+		if msgs > 3 {
+			cancel()
 		}
-
-		clientCancel()
 	})
 
+	errs := 0
 	for err := range stream.Sub() {
-		var expected string
-		expected, expectedErrors = expectedErrors[0], expectedErrors[1:]
-
-		assert.Regexp(t, regexp.MustCompile(expected), err)
-
-		if len(expectedErrors) != 0 {
-			continue
-		}
-
-		assert.Equal(t, messagesCount, 4)
+		assert.Contains(t, err.Error(), pageDeleteTestErrors[errs].Error())
+		errs++
 	}
+
+	assert.Equal(t, 4, msgs)
 }
