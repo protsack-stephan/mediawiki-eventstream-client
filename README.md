@@ -1,6 +1,6 @@
 # Mediawiki EventStreams client for Go
 
-Non blocking execution (with cancel context):
+Reconnect on error (stop only with context):
 ```go
 ctx, cancel := context.WithCancel(context.Background())
 client := eventstream.NewClient()
@@ -19,7 +19,7 @@ for err := range stream.Sub() {
 }
 ```
 
-Blocking the execution:
+Exit on error:
 ```go
 client := eventstream.NewClient()
 stream := client.PageDelete(context.Background(), time.Now(), func(evt *events.PageDelete) {
