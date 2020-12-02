@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var revScoreTestErrors = []error{io.EOF, io.EOF, context.Canceled}
-var revScoreTestSince = time.Now().UTC()
-var revScoreTestResponse = map[int]struct {
+var revVisibilityChangeTestErrors = []error{io.EOF, io.EOF, context.Canceled}
+var revVisibilityChangeTestSince = time.Now().UTC()
+var revVisibilityChangeTestResponse = map[int]struct {
 	Topic     string
 	PageTitle string
 	RevID     int
@@ -30,18 +30,18 @@ var revScoreTestResponse = map[int]struct {
 	},
 }
 
-const revScoreTestExecURL = "/revision-score-exec"
-const revScoreTestSubURL = "/revision-score-sub"
+const revVisibilityChangeTestExecURL = "/revision-visibility-change-exec"
+const revVisibilityChangeTestSubURL = "/revision-visibility-change-sub"
 
-func createRevScoreServer(t *testing.T, since *time.Time) (http.Handler, error) {
+func createRevVisibilityChangeServer(t *testing.T, since *time.Time) (http.Handler, error) {
 	router := http.NewServeMux()
-	stubs, err := readStub("revision-score.json")
+	stubs, err := readStub("revision-visibility-change.json")
 
 	if err != nil {
 		return router, err
 	}
 
-	router.HandleFunc(revScoreTestExecURL, func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(revVisibilityChangeTestExecURL, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, since.Format(time.RFC3339), r.URL.Query().Get("since"))
 
 		f := w.(http.Flusher)
@@ -52,7 +52,7 @@ func createRevScoreServer(t *testing.T, since *time.Time) (http.Handler, error) 
 		}
 	})
 
-	router.HandleFunc(revScoreTestSubURL, func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(revVisibilityChangeTestSubURL, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, since.Format(time.RFC3339), r.URL.Query().Get("since"))
 
 		f := w.(http.Flusher)
@@ -66,16 +66,16 @@ func createRevScoreServer(t *testing.T, since *time.Time) (http.Handler, error) 
 	return router, nil
 }
 
-func testRevScoreEvent(t *testing.T, evt *RevisionScore) {
-	expected := revScoreTestResponse[evt.Data.PageID]
+func testRevVisibilityChangeEvent(t *testing.T, evt *RevisionVisibilityChange) {
+	expected := revVisibilityChangeTestResponse[evt.Data.PageID]
 	assert.NotNil(t, expected)
 	assert.Equal(t, expected.Topic, evt.ID[0].Topic)
 	assert.Equal(t, expected.PageTitle, evt.Data.PageTitle)
 	assert.Equal(t, expected.RevID, evt.Data.RevID)
 }
 
-func TestRevScoreExec(t *testing.T) {
-	router, err := createRevScoreServer(t, &revScoreTestSince)
+func TestRevisionScoreExec(t *testing.T) {
+	router, err := createRevVisibilityChangeServer(t, &revVisibilityChangeTestSince)
 	assert.NoError(t, err)
 
 	srv := httptest.NewServer(router)
@@ -84,20 +84,20 @@ func TestRevScoreExec(t *testing.T) {
 	client := NewBuilder().
 		URL(srv.URL).
 		Options(&Options{
-			RevisionScoreURL: revScoreTestExecURL,
+			RevisionScoreURL: revVisibilityChangeTestExecURL,
 		}).
 		Build()
 
-	stream := client.RevisionScore(context.Background(), time.Now().UTC(), func(evt *RevisionScore) {
-		testRevScoreEvent(t, evt)
+	stream := client.RevisionVisibilityChange(context.Background(), time.Now().UTC(), func(evt *RevisionVisibilityChange) {
+		testRevVisibilityChangeEvent(t, evt)
 	})
 
 	assert.Equal(t, io.EOF, stream.Exec())
 }
 
-func TestRevScoreSub(t *testing.T) {
+func TestRevVisibilityChangeSub(t *testing.T) {
 	since := time.Now().UTC()
-	router, err := createRevScoreServer(t, &since)
+	router, err := createRevVisibilityChangeServer(t, &since)
 
 	assert.Nil(t, err)
 
@@ -108,13 +108,13 @@ func TestRevScoreSub(t *testing.T) {
 	client := NewBuilder().
 		URL(srv.URL).
 		Options(&Options{
-			RevisionScoreURL: revScoreTestSubURL,
+			RevisionVisibilityChangeURL: revVisibilityChangeTestSubURL,
 		}).
 		Build()
 
 	msgs := 0
-	stream := client.RevisionScore(ctx, revScoreTestSince, func(evt *RevisionScore) {
-		testRevScoreEvent(t, evt)
+	stream := client.RevisionVisibilityChange(ctx, revVisibilityChangeTestSince, func(evt *RevisionVisibilityChange) {
+		testRevVisibilityChangeEvent(t, evt)
 		since = evt.Data.Meta.Dt
 		msgs++
 
@@ -125,7 +125,7 @@ func TestRevScoreSub(t *testing.T) {
 
 	errs := 0
 	for err := range stream.Sub() {
-		assert.Contains(t, err.Error(), revScoreTestErrors[errs].Error())
+		assert.Contains(t, err.Error(), revVisibilityChangeTestErrors[errs].Error())
 		errs++
 	}
 

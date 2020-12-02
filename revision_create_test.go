@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var revisionCreateTestErrors = []error{io.EOF, io.EOF, context.Canceled}
-var revisionCreateTestSince = time.Now().UTC()
-var revisionCreateTestResponse = map[int]struct {
+var revCreateTestErrors = []error{io.EOF, io.EOF, context.Canceled}
+var revCreateTestSince = time.Now().UTC()
+var revCreateTestResponse = map[int]struct {
 	Topic     string
 	PageTitle string
 	RevID     int
@@ -30,10 +30,10 @@ var revisionCreateTestResponse = map[int]struct {
 	},
 }
 
-const revisionCreateTestExecURL = "/revision-create-exec"
-const revisionCreateTestSubURL = "/revision-create-sub"
+const revCreateTestExecURL = "/revision-create-exec"
+const revCreateTestSubURL = "/revision-create-sub"
 
-func createRevisionCreateServer(t *testing.T, since *time.Time) (http.Handler, error) {
+func createRevCreateServer(t *testing.T, since *time.Time) (http.Handler, error) {
 	router := http.NewServeMux()
 	stubs, err := readStub("revision-create.json")
 
@@ -41,7 +41,7 @@ func createRevisionCreateServer(t *testing.T, since *time.Time) (http.Handler, e
 		return router, err
 	}
 
-	router.HandleFunc(revisionCreateTestExecURL, func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(revCreateTestExecURL, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, since.Format(time.RFC3339), r.URL.Query().Get("since"))
 
 		f := w.(http.Flusher)
@@ -52,7 +52,7 @@ func createRevisionCreateServer(t *testing.T, since *time.Time) (http.Handler, e
 		}
 	})
 
-	router.HandleFunc(revisionCreateTestSubURL, func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(revCreateTestSubURL, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, since.Format(time.RFC3339), r.URL.Query().Get("since"))
 
 		f := w.(http.Flusher)
@@ -66,16 +66,16 @@ func createRevisionCreateServer(t *testing.T, since *time.Time) (http.Handler, e
 	return router, nil
 }
 
-func testRevisionCreateEvent(t *testing.T, evt *RevisionCreate) {
-	expected := revisionCreateTestResponse[evt.Data.PageID]
+func testRevCreateEvent(t *testing.T, evt *RevisionCreate) {
+	expected := revCreateTestResponse[evt.Data.PageID]
 	assert.NotNil(t, expected)
 	assert.Equal(t, expected.Topic, evt.ID[0].Topic)
 	assert.Equal(t, expected.PageTitle, evt.Data.PageTitle)
 	assert.Equal(t, expected.RevID, evt.Data.RevID)
 }
 
-func TestRevisionCreateExec(t *testing.T) {
-	router, err := createRevisionCreateServer(t, &revisionCreateTestSince)
+func TestRevCreateExec(t *testing.T) {
+	router, err := createRevCreateServer(t, &revCreateTestSince)
 	assert.NoError(t, err)
 
 	srv := httptest.NewServer(router)
@@ -84,12 +84,12 @@ func TestRevisionCreateExec(t *testing.T) {
 	client := NewBuilder().
 		URL(srv.URL).
 		Options(&Options{
-			RevisionCreateURL: revisionCreateTestExecURL,
+			RevisionCreateURL: revCreateTestExecURL,
 		}).
 		Build()
 
 	stream := client.RevisionCreate(context.Background(), time.Now().UTC(), func(evt *RevisionCreate) {
-		testRevisionCreateEvent(t, evt)
+		testRevCreateEvent(t, evt)
 	})
 
 	assert.Equal(t, io.EOF, stream.Exec())
@@ -97,7 +97,7 @@ func TestRevisionCreateExec(t *testing.T) {
 
 func TestRevisionCreateSub(t *testing.T) {
 	since := time.Now().UTC()
-	router, err := createRevisionCreateServer(t, &since)
+	router, err := createRevCreateServer(t, &since)
 
 	assert.Nil(t, err)
 
@@ -108,13 +108,13 @@ func TestRevisionCreateSub(t *testing.T) {
 	client := NewBuilder().
 		URL(srv.URL).
 		Options(&Options{
-			RevisionCreateURL: revisionCreateTestSubURL,
+			RevisionCreateURL: revCreateTestSubURL,
 		}).
 		Build()
 
 	msgs := 0
-	stream := client.RevisionCreate(ctx, revisionCreateTestSince, func(evt *RevisionCreate) {
-		testRevisionCreateEvent(t, evt)
+	stream := client.RevisionCreate(ctx, revCreateTestSince, func(evt *RevisionCreate) {
+		testRevCreateEvent(t, evt)
 		since = evt.Data.Meta.Dt
 		msgs++
 
@@ -125,7 +125,7 @@ func TestRevisionCreateSub(t *testing.T) {
 
 	errs := 0
 	for err := range stream.Sub() {
-		assert.Contains(t, err.Error(), revisionCreateTestErrors[errs].Error())
+		assert.Contains(t, err.Error(), revCreateTestErrors[errs].Error())
 		errs++
 	}
 
