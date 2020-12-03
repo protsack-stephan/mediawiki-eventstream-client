@@ -18,14 +18,14 @@ var revVisibilityChangeTestResponse = map[int]struct {
 	PageTitle string
 	RevID     int
 }{
-	66132507: {
-		Topic:     "eqiad.mediawiki.revision-score",
-		PageTitle: "Q66533108",
-		RevID:     1316923273,
+	123: {
+		Topic:     "eqiad.mediawiki.revision-visibility-change",
+		PageTitle: "TestPage10",
+		RevID:     123,
 	},
-	13731303: {
-		Topic:     "eqiad.mediawiki.revision-score",
-		PageTitle: "Utilisateur:Denvis1/NCAA-Squelette_équipe",
+	66132507: {
+		Topic:     "eqiad.mediawiki.revision-visibility-change",
+		PageTitle: "Ytilisateur:Denvis1/NCAA-Squelette_éqoio",
 		RevID:     177205614,
 	},
 }
@@ -74,7 +74,7 @@ func testRevVisibilityChangeEvent(t *testing.T, evt *RevisionVisibilityChange) {
 	assert.Equal(t, expected.RevID, evt.Data.RevID)
 }
 
-func TestRevisionScoreExec(t *testing.T) {
+func TestRevVisibilityChangeExec(t *testing.T) {
 	router, err := createRevVisibilityChangeServer(t, &revVisibilityChangeTestSince)
 	assert.NoError(t, err)
 
@@ -84,11 +84,11 @@ func TestRevisionScoreExec(t *testing.T) {
 	client := NewBuilder().
 		URL(srv.URL).
 		Options(&Options{
-			RevisionScoreURL: revVisibilityChangeTestExecURL,
+			RevisionVisibilityChangeURL: revVisibilityChangeTestExecURL,
 		}).
 		Build()
 
-	stream := client.RevisionVisibilityChange(context.Background(), time.Now().UTC(), func(evt *RevisionVisibilityChange) {
+	stream := client.RevisionVisibilityChange(context.Background(), revVisibilityChangeTestSince, func(evt *RevisionVisibilityChange) {
 		testRevVisibilityChangeEvent(t, evt)
 	})
 
@@ -96,7 +96,7 @@ func TestRevisionScoreExec(t *testing.T) {
 }
 
 func TestRevVisibilityChangeSub(t *testing.T) {
-	since := time.Now().UTC()
+	since := revVisibilityChangeTestSince
 	router, err := createRevVisibilityChangeServer(t, &since)
 
 	assert.Nil(t, err)
