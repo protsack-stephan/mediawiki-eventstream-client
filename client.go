@@ -16,7 +16,7 @@ const (
 	pageMoveURL                 = "/v2/stream/page-move"
 	revisionCreateURL           = "/v2/stream/revision-create"
 	revisionScoreURL            = "/v2/stream/revision-score"
-	revisionVisibilityChangeURL = "/v2/stream/revision-visibility-change"
+	revisionVisibilityChangeURL = "/v2/stream/mediawiki.revision-visibility-change"
 )
 
 // NewClient creating new connection client
