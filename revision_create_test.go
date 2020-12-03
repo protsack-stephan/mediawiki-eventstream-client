@@ -88,7 +88,7 @@ func TestRevCreateExec(t *testing.T) {
 		}).
 		Build()
 
-	stream := client.RevisionCreate(context.Background(), time.Now().UTC(), func(evt *RevisionCreate) {
+	stream := client.RevisionCreate(context.Background(), revCreateTestSince, func(evt *RevisionCreate) {
 		testRevCreateEvent(t, evt)
 	})
 
@@ -96,7 +96,7 @@ func TestRevCreateExec(t *testing.T) {
 }
 
 func TestRevisionCreateSub(t *testing.T) {
-	since := time.Now().UTC()
+	since := revCreateTestSince
 	router, err := createRevCreateServer(t, &since)
 
 	assert.Nil(t, err)

@@ -88,7 +88,7 @@ func TestPageDeleteExec(t *testing.T) {
 		}).
 		Build()
 
-	stream := client.PageDelete(context.Background(), time.Now().UTC(), func(evt *PageDelete) {
+	stream := client.PageDelete(context.Background(), pageDeleteTestSince, func(evt *PageDelete) {
 		testPageDeleteEvent(t, evt)
 	})
 
@@ -96,7 +96,7 @@ func TestPageDeleteExec(t *testing.T) {
 }
 
 func TestPageDeleteSub(t *testing.T) {
-	since := time.Now().UTC()
+	since := pageDeleteTestSince
 	router, err := createPageDeleteServer(t, &since)
 
 	assert.Nil(t, err)

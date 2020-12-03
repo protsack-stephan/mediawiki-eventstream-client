@@ -88,7 +88,7 @@ func TestPageMoveExec(t *testing.T) {
 		}).
 		Build()
 
-	stream := client.PageMove(context.Background(), time.Now().UTC(), func(evt *PageMove) {
+	stream := client.PageMove(context.Background(), pageMoveTestSince, func(evt *PageMove) {
 		testPageMoveEvent(t, evt)
 	})
 
@@ -96,7 +96,7 @@ func TestPageMoveExec(t *testing.T) {
 }
 
 func TestPageMoveSub(t *testing.T) {
-	since := time.Now().UTC()
+	since := pageMoveTestSince
 	router, err := createPageMoveServer(t, &since)
 
 	assert.Nil(t, err)

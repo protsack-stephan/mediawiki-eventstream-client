@@ -88,7 +88,7 @@ func TestRevScoreExec(t *testing.T) {
 		}).
 		Build()
 
-	stream := client.RevisionScore(context.Background(), time.Now().UTC(), func(evt *RevisionScore) {
+	stream := client.RevisionScore(context.Background(), revScoreTestSince, func(evt *RevisionScore) {
 		testRevScoreEvent(t, evt)
 	})
 
@@ -96,7 +96,7 @@ func TestRevScoreExec(t *testing.T) {
 }
 
 func TestRevScoreSub(t *testing.T) {
-	since := time.Now().UTC()
+	since := revScoreTestSince
 	router, err := createRevScoreServer(t, &since)
 
 	assert.Nil(t, err)
