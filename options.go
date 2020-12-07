@@ -1,6 +1,6 @@
 package eventstream
 
-// Options client url options
+// Options client url values
 type Options struct {
 	PageDeleteURL               string
 	PageMoveURL                 string

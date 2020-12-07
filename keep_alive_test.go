@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var keepAliveTestError = errors.New("keep alive error")
+var errKeepAliveTest = errors.New("keep alive error")
 
 const keepAliveTestBackoffTime = time.Millisecond * 1
 const keepAliveNumberOfErrors = 5
@@ -27,7 +27,7 @@ func TestKeepAlive(t *testing.T) {
 		thrownErrs++
 
 		if thrownErrs < keepAliveNumberOfErrors {
-			return keepAliveTestError
+			return errKeepAliveTest
 		}
 
 		return context.Canceled
@@ -41,7 +41,7 @@ func TestKeepAlive(t *testing.T) {
 		if thrownErrs >= keepAliveNumberOfErrors {
 			assert.Equal(t, context.Canceled, err)
 		} else {
-			assert.Equal(t, keepAliveTestError, err)
+			assert.Equal(t, errKeepAliveTest, err)
 			storageSince = storageSince.Add(time.Hour * 1)
 			storage.setSince(storageSince)
 		}

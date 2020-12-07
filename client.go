@@ -95,7 +95,7 @@ func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler fu
 	})
 }
 
-// RevisionVisibilityChange connext to revision visibility change stream
+// RevisionVisibilityChange connect to revision visibility change stream
 func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time, handler func(evt *RevisionVisibilityChange)) *Stream {
 	store := newStorage(since, cl.backoffTime)
 

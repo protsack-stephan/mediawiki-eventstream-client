@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var streamTestError = errors.New("stream test error")
+var errStreamTest = errors.New("stream test error")
 var streamTestSince = time.Now().UTC().Add(time.Hour * 2)
 
 const streamTestBackoff = time.Millisecond * 1
@@ -24,7 +24,7 @@ func TestStream(t *testing.T) {
 		thrownErrs++
 
 		if thrownErrs < keepAliveNumberOfErrors {
-			return streamTestError
+			return errStreamTest
 		}
 
 		return context.Canceled
@@ -36,7 +36,7 @@ func TestStream(t *testing.T) {
 		if thrownErrs >= keepAliveNumberOfErrors {
 			assert.Equal(t, context.Canceled, err)
 		} else {
-			assert.Equal(t, streamTestError, err)
+			assert.Equal(t, errStreamTest, err)
 		}
 	}
 
@@ -45,8 +45,8 @@ func TestStream(t *testing.T) {
 
 	stream = NewStream(storage, func(since time.Time) error {
 		assert.Equal(t, streamTestSince, since)
-		return streamTestError
+		return errStreamTest
 	})
 
-	assert.Equal(t, streamTestError, stream.Exec())
+	assert.Equal(t, errStreamTest, stream.Exec())
 }
