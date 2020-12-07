@@ -17,7 +17,7 @@ func TestStorage(t *testing.T) {
 	caughtErrs := 0
 	storage := newStorage(storageTestSince, storageTestBackoff)
 
-	assert.NotNil(t, storage.mu)
+	assert.NotNil(t, &storage.mu)
 	assert.NotNil(t, storage.errs)
 	assert.NotNil(t, storage.backoff)
 	assert.NotNil(t, storage.errs)

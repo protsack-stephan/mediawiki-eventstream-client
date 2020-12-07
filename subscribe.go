@@ -43,10 +43,10 @@ func subscribe(ctx context.Context, client *http.Client, url string, since time.
 		err = evt.SetID(body)
 
 		if err != nil {
-			evt.SetData(body)
+			err = evt.SetData(body)
 		}
 
-		if len(evt.ID) > 0 && len(evt.Data) > 0 {
+		if len(evt.ID) > 0 && len(evt.Data) > 0 && err == nil {
 			handler(evt)
 			evt = new(Event)
 		}
