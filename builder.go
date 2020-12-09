@@ -29,7 +29,7 @@ func (cb *ClientBuilder) HTTPClient(client *http.Client) *ClientBuilder {
 	return cb
 }
 
-// BackoffTime set clients backoff time
+// BackoffTime set backoff time for client
 func (cb *ClientBuilder) BackoffTime(backoffTime time.Duration) *ClientBuilder {
 	cb.client.backoffTime = backoffTime
 	return cb
@@ -41,7 +41,7 @@ func (cb *ClientBuilder) Options(options *Options) *ClientBuilder {
 	return cb
 }
 
-// Build create new client with provided options
+// Build create new client with provided configuration
 func (cb *ClientBuilder) Build() *Client {
 	return cb.client
 }

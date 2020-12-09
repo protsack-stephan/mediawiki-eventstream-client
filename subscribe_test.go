@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -37,8 +38,14 @@ func createSubscribeServer(t *testing.T) http.Handler {
 			msg := `event: message` + "\n"
 			msg += fmt.Sprintf(`id: [{"topic":"%s","partition":0,"timestamp":%d},{"topic":"%s","partition":0,"offset":-1}]`+"\n", subscribeTestTopic, subscribeTestTime, subscribeTestTopic)
 			msg += `data: ` + fmt.Sprintf(`{ "title": "%s" }`, subscribeTestTitle) + "\n"
-			w.Write([]byte(msg))
-			f.Flush()
+
+			_, err := w.Write([]byte(msg))
+
+			if err != nil {
+				log.Panic(err)
+			} else {
+				f.Flush()
+			}
 		}
 	})
 

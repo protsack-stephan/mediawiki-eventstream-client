@@ -3,6 +3,7 @@ package eventstream
 import (
 	"context"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -47,8 +48,13 @@ func createRevVisibilityChangeServer(t *testing.T, since *time.Time) (http.Handl
 		f := w.(http.Flusher)
 
 		for _, stub := range stubs {
-			w.Write(stub)
-			f.Flush()
+			_, err = w.Write(stub)
+
+			if err != nil {
+				log.Panic(err)
+			} else {
+				f.Flush()
+			}
 		}
 	})
 
@@ -58,8 +64,13 @@ func createRevVisibilityChangeServer(t *testing.T, since *time.Time) (http.Handl
 		f := w.(http.Flusher)
 
 		for _, stub := range stubs {
-			w.Write(stub)
-			f.Flush()
+			_, err = w.Write(stub)
+
+			if err != nil {
+				log.Panic(err)
+			} else {
+				f.Flush()
+			}
 		}
 	})
 

@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// NewStream create new result instance
+// NewStream create new stream instance
 func NewStream(store *storage, handler func(since time.Time) error) *Stream {
 	return &Stream{
 		store,
@@ -12,7 +12,7 @@ func NewStream(store *storage, handler func(since time.Time) error) *Stream {
 	}
 }
 
-// Stream stream execution result
+// Stream this is for controlling steam execution
 type Stream struct {
 	store   *storage
 	handler func(since time.Time) error
