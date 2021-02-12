@@ -14,7 +14,7 @@ type stub struct {
 func readStub(name string) ([][]byte, error) {
 	msgs := [][]byte{}
 	stubs := []*stub{}
-	file, err := os.Open("./stubs/" + name)
+	file, err := os.Open("./testdata/" + name)
 
 	if err != nil {
 		return msgs, err

@@ -36,4 +36,4 @@ if err != nil {
 For more information about the stream and how to use it visit [EventStreams](https://stream.wikimedia.org/?doc) documentation.
 
 
-### *Note that we are not supporting all the streams yet, we'll be adding more streams support, feel free to fork the repo or create PR to add new streams.
+### *Note that we are not supporting all the streams yet, we'll be adding more streams support in the future, feel free to fork the repo or create PR to add new streams.
