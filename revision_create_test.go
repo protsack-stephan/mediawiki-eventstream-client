@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var errRevisionCreateTest = errors.New("revision create test error")
+var errRevCreateTest = errors.New("revision create test error")
 var revCreateTestErrors = []error{io.EOF, io.EOF, context.Canceled}
 var revCreateTestSince = time.Now().UTC()
 var revCreateTestResponse = map[int]struct {
@@ -167,10 +167,10 @@ func TestRevisionCreateExecError(t *testing.T) {
 	stream := client.RevisionCreate(context.Background(), revCreateTestSince, func(evt *RevisionCreate) error {
 		testRevCreateEvent(t, evt)
 		since = evt.Data.Meta.Dt
-		return errRevisionCreateTest
+		return errRevCreateTest
 	})
 
-	assert.Equal(t, errRevisionCreateTest, stream.Exec())
+	assert.Equal(t, errRevCreateTest, stream.Exec())
 }
 
 func TestRevisionCreateSubError(t *testing.T) {
@@ -192,11 +192,11 @@ func TestRevisionCreateSubError(t *testing.T) {
 	stream := client.RevisionCreate(context.Background(), revCreateTestSince, func(evt *RevisionCreate) error {
 		testRevCreateEvent(t, evt)
 		since = evt.Data.Meta.Dt
-		return errRevisionCreateTest
+		return errRevCreateTest
 	})
 
 	for err := range stream.Sub() {
-		assert.Equal(t, errRevisionCreateTest, err)
+		assert.Equal(t, errRevCreateTest, err)
 		break
 	}
 }

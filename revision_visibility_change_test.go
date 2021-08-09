@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var errVisibilityChangeTest = errors.New("visibility change test error")
+var errRevVisibilityChangeTest = errors.New("visibility change test error")
 var revVisibilityChangeTestErrors = []error{io.EOF, io.EOF, context.Canceled}
 var revVisibilityChangeTestSince = time.Now().UTC()
 var revVisibilityChangeTestResponse = map[int]struct {
@@ -167,10 +167,10 @@ func TestRevVisibilityChangeExecError(t *testing.T) {
 	stream := client.RevisionVisibilityChange(context.Background(), revCreateTestSince, func(evt *RevisionVisibilityChange) error {
 		testRevVisibilityChangeEvent(t, evt)
 		since = evt.Data.Meta.Dt
-		return errVisibilityChangeTest
+		return errRevVisibilityChangeTest
 	})
 
-	assert.Equal(t, errVisibilityChangeTest, stream.Exec())
+	assert.Equal(t, errRevVisibilityChangeTest, stream.Exec())
 }
 
 func TestRevVisibilityChangeSubError(t *testing.T) {
@@ -192,11 +192,11 @@ func TestRevVisibilityChangeSubError(t *testing.T) {
 	stream := client.RevisionVisibilityChange(context.Background(), revCreateTestSince, func(evt *RevisionVisibilityChange) error {
 		testRevVisibilityChangeEvent(t, evt)
 		since = evt.Data.Meta.Dt
-		return errVisibilityChangeTest
+		return errRevVisibilityChangeTest
 	})
 
 	for err := range stream.Sub() {
-		assert.Equal(t, errVisibilityChangeTest, err)
+		assert.Equal(t, errRevVisibilityChangeTest, err)
 		break
 	}
 }
