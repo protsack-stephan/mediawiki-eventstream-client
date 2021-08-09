@@ -2,6 +2,7 @@ package eventstream
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var errPageDeleteTest = errors.New("page delete test error")
 var pageDeleteTestErrors = []error{io.EOF, io.EOF, context.Canceled}
 var pageDeleteTestSince = time.Now().UTC()
 var pageDeleteTestResponse = map[int]struct {
@@ -99,8 +101,9 @@ func TestPageDeleteExec(t *testing.T) {
 		}).
 		Build()
 
-	stream := client.PageDelete(context.Background(), pageDeleteTestSince, func(evt *PageDelete) {
+	stream := client.PageDelete(context.Background(), pageDeleteTestSince, func(evt *PageDelete) error {
 		testPageDeleteEvent(t, evt)
+		return nil
 	})
 
 	assert.Equal(t, io.EOF, stream.Exec())
@@ -124,7 +127,7 @@ func TestPageDeleteSub(t *testing.T) {
 		Build()
 
 	msgs := 0
-	stream := client.PageDelete(ctx, pageDeleteTestSince, func(evt *PageDelete) {
+	stream := client.PageDelete(ctx, pageDeleteTestSince, func(evt *PageDelete) error {
 		testPageDeleteEvent(t, evt)
 		since = evt.Data.Meta.Dt
 		msgs++
@@ -132,6 +135,8 @@ func TestPageDeleteSub(t *testing.T) {
 		if msgs > 3 {
 			cancel()
 		}
+
+		return nil
 	})
 
 	errs := 0
@@ -141,4 +146,57 @@ func TestPageDeleteSub(t *testing.T) {
 	}
 
 	assert.Equal(t, 4, msgs)
+}
+
+func TestPageDeleteExecError(t *testing.T) {
+	since := pageDeleteTestSince
+	router, err := createPageDeleteServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			PageDeleteURL: pageDeleteTestSubURL,
+		}).
+		Build()
+
+	stream := client.PageDelete(context.Background(), pageDeleteTestSince, func(evt *PageDelete) error {
+		testPageDeleteEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errPageDeleteTest
+	})
+
+	assert.Equal(t, errPageDeleteTest, stream.Exec())
+}
+
+func TestPageDeleteSubError(t *testing.T) {
+	since := pageDeleteTestSince
+	router, err := createPageDeleteServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			PageDeleteURL: pageDeleteTestSubURL,
+		}).
+		Build()
+
+	stream := client.PageDelete(context.Background(), pageDeleteTestSince, func(evt *PageDelete) error {
+		testPageDeleteEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errPageDeleteTest
+	})
+
+	for err := range stream.Sub() {
+		assert.Equal(t, errPageDeleteTest, err)
+		break
+	}
 }

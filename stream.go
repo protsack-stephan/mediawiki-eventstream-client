@@ -20,7 +20,17 @@ type Stream struct {
 
 // Exec blocking execution stream
 func (sm *Stream) Exec() error {
-	return sm.handler(sm.store.getSince())
+	go func() {
+		if err := sm.handler(sm.store.getSince()); err != nil {
+			sm.store.setError(err)
+		}
+	}()
+
+	for err := range sm.store.getErrors() {
+		return err
+	}
+
+	return nil
 }
 
 // Sub non blocking execution stream

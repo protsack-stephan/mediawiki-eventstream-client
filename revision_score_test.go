@@ -2,6 +2,7 @@ package eventstream
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var errRevisionScoreTest = errors.New("revision score test error")
 var revScoreTestErrors = []error{io.EOF, io.EOF, context.Canceled}
 var revScoreTestSince = time.Now().UTC()
 var revScoreTestResponse = map[int]struct {
@@ -99,8 +101,9 @@ func TestRevScoreExec(t *testing.T) {
 		}).
 		Build()
 
-	stream := client.RevisionScore(context.Background(), revScoreTestSince, func(evt *RevisionScore) {
+	stream := client.RevisionScore(context.Background(), revScoreTestSince, func(evt *RevisionScore) error {
 		testRevScoreEvent(t, evt)
+		return nil
 	})
 
 	assert.Equal(t, io.EOF, stream.Exec())
@@ -124,7 +127,7 @@ func TestRevScoreSub(t *testing.T) {
 		Build()
 
 	msgs := 0
-	stream := client.RevisionScore(ctx, revScoreTestSince, func(evt *RevisionScore) {
+	stream := client.RevisionScore(ctx, revScoreTestSince, func(evt *RevisionScore) error {
 		testRevScoreEvent(t, evt)
 		since = evt.Data.Meta.Dt
 		msgs++
@@ -132,6 +135,8 @@ func TestRevScoreSub(t *testing.T) {
 		if msgs > 3 {
 			cancel()
 		}
+
+		return nil
 	})
 
 	errs := 0
@@ -141,4 +146,57 @@ func TestRevScoreSub(t *testing.T) {
 	}
 
 	assert.Equal(t, 4, msgs)
+}
+
+func TestRevisionScoreExecError(t *testing.T) {
+	since := revScoreTestSince
+	router, err := createRevScoreServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			RevisionScoreURL: revScoreTestExecURL,
+		}).
+		Build()
+
+	stream := client.RevisionScore(context.Background(), revScoreTestSince, func(evt *RevisionScore) error {
+		testRevScoreEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errRevisionScoreTest
+	})
+
+	assert.Equal(t, errRevisionScoreTest, stream.Exec())
+}
+
+func TestRevisionScoreSubError(t *testing.T) {
+	since := revScoreTestSince
+	router, err := createRevScoreServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			RevisionScoreURL: revScoreTestSubURL,
+		}).
+		Build()
+
+	stream := client.RevisionScore(context.Background(), revScoreTestSince, func(evt *RevisionScore) error {
+		testRevScoreEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errRevisionScoreTest
+	})
+
+	for err := range stream.Sub() {
+		assert.Equal(t, errRevisionScoreTest, err)
+		break
+	}
 }

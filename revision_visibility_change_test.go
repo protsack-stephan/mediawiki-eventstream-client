@@ -2,6 +2,7 @@ package eventstream
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var errVisibilityChangeTest = errors.New("visibility change test error")
 var revVisibilityChangeTestErrors = []error{io.EOF, io.EOF, context.Canceled}
 var revVisibilityChangeTestSince = time.Now().UTC()
 var revVisibilityChangeTestResponse = map[int]struct {
@@ -99,8 +101,9 @@ func TestRevVisibilityChangeExec(t *testing.T) {
 		}).
 		Build()
 
-	stream := client.RevisionVisibilityChange(context.Background(), revVisibilityChangeTestSince, func(evt *RevisionVisibilityChange) {
+	stream := client.RevisionVisibilityChange(context.Background(), revVisibilityChangeTestSince, func(evt *RevisionVisibilityChange) error {
 		testRevVisibilityChangeEvent(t, evt)
+		return nil
 	})
 
 	assert.Equal(t, io.EOF, stream.Exec())
@@ -124,7 +127,7 @@ func TestRevVisibilityChangeSub(t *testing.T) {
 		Build()
 
 	msgs := 0
-	stream := client.RevisionVisibilityChange(ctx, revVisibilityChangeTestSince, func(evt *RevisionVisibilityChange) {
+	stream := client.RevisionVisibilityChange(ctx, revVisibilityChangeTestSince, func(evt *RevisionVisibilityChange) error {
 		testRevVisibilityChangeEvent(t, evt)
 		since = evt.Data.Meta.Dt
 		msgs++
@@ -132,6 +135,8 @@ func TestRevVisibilityChangeSub(t *testing.T) {
 		if msgs > 3 {
 			cancel()
 		}
+
+		return nil
 	})
 
 	errs := 0
@@ -141,4 +146,57 @@ func TestRevVisibilityChangeSub(t *testing.T) {
 	}
 
 	assert.Equal(t, 4, msgs)
+}
+
+func TestRevVisibilityChangeExecError(t *testing.T) {
+	since := revCreateTestSince
+	router, err := createRevVisibilityChangeServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			RevisionVisibilityChangeURL: revVisibilityChangeTestExecURL,
+		}).
+		Build()
+
+	stream := client.RevisionVisibilityChange(context.Background(), revCreateTestSince, func(evt *RevisionVisibilityChange) error {
+		testRevVisibilityChangeEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errVisibilityChangeTest
+	})
+
+	assert.Equal(t, errVisibilityChangeTest, stream.Exec())
+}
+
+func TestRevVisibilityChangeSubError(t *testing.T) {
+	since := revCreateTestSince
+	router, err := createRevVisibilityChangeServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			RevisionVisibilityChangeURL: revVisibilityChangeTestSubURL,
+		}).
+		Build()
+
+	stream := client.RevisionVisibilityChange(context.Background(), revCreateTestSince, func(evt *RevisionVisibilityChange) error {
+		testRevVisibilityChangeEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errVisibilityChangeTest
+	})
+
+	for err := range stream.Sub() {
+		assert.Equal(t, errVisibilityChangeTest, err)
+		break
+	}
 }
