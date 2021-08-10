@@ -2,6 +2,7 @@ package eventstream
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var errRevCreateTest = errors.New("revision create test error")
 var revCreateTestErrors = []error{io.EOF, io.EOF, context.Canceled}
 var revCreateTestSince = time.Now().UTC()
 var revCreateTestResponse = map[int]struct {
@@ -99,8 +101,9 @@ func TestRevCreateExec(t *testing.T) {
 		}).
 		Build()
 
-	stream := client.RevisionCreate(context.Background(), revCreateTestSince, func(evt *RevisionCreate) {
+	stream := client.RevisionCreate(context.Background(), revCreateTestSince, func(evt *RevisionCreate) error {
 		testRevCreateEvent(t, evt)
+		return nil
 	})
 
 	assert.Equal(t, io.EOF, stream.Exec())
@@ -124,7 +127,7 @@ func TestRevisionCreateSub(t *testing.T) {
 		Build()
 
 	msgs := 0
-	stream := client.RevisionCreate(ctx, revCreateTestSince, func(evt *RevisionCreate) {
+	stream := client.RevisionCreate(ctx, revCreateTestSince, func(evt *RevisionCreate) error {
 		testRevCreateEvent(t, evt)
 		since = evt.Data.Meta.Dt
 		msgs++
@@ -132,6 +135,8 @@ func TestRevisionCreateSub(t *testing.T) {
 		if msgs > 3 {
 			cancel()
 		}
+
+		return nil
 	})
 
 	errs := 0
@@ -141,4 +146,57 @@ func TestRevisionCreateSub(t *testing.T) {
 	}
 
 	assert.Equal(t, 4, msgs)
+}
+
+func TestRevisionCreateExecError(t *testing.T) {
+	since := revCreateTestSince
+	router, err := createRevCreateServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			RevisionCreateURL: revCreateTestSubURL,
+		}).
+		Build()
+
+	stream := client.RevisionCreate(context.Background(), revCreateTestSince, func(evt *RevisionCreate) error {
+		testRevCreateEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errRevCreateTest
+	})
+
+	assert.Equal(t, errRevCreateTest, stream.Exec())
+}
+
+func TestRevisionCreateSubError(t *testing.T) {
+	since := revCreateTestSince
+	router, err := createRevCreateServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			RevisionCreateURL: revCreateTestSubURL,
+		}).
+		Build()
+
+	stream := client.RevisionCreate(context.Background(), revCreateTestSince, func(evt *RevisionCreate) error {
+		testRevCreateEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errRevCreateTest
+	})
+
+	for err := range stream.Sub() {
+		assert.Equal(t, errRevCreateTest, err)
+		break
+	}
 }

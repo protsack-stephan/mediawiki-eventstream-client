@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	eventstream "github.com/protsack-stephan/mediawiki-eventstream-client"
@@ -11,13 +13,12 @@ import (
 func main() {
 	client := eventstream.NewClient()
 
-	stream := client.RevisionScore(context.Background(), time.Now().UTC(), func(evt *eventstream.RevisionScore) {
-		fmt.Println(evt.Data.Schema)
-		fmt.Println(evt.Data.Meta.Dt)
-		fmt.Println(evt.Data.Scores.Damaging)
+	stream := client.RevisionScore(context.Background(), time.Now().UTC(), func(evt *eventstream.RevisionScore) error {
+		fmt.Println(evt.Data.Database)
+		return errors.New("hello world")
 	})
 
 	for err := range stream.Sub() {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }

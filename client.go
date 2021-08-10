@@ -44,66 +44,81 @@ type Client struct {
 }
 
 // PageDelete connect to page delete stream
-func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(evt *PageDelete)) *Stream {
+func (cl *Client) PageDelete(ctx context.Context, since time.Time, handler func(evt *PageDelete) error) *Stream {
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.httpClient, cl.url+cl.options.PageDeleteURL, store.getSince(), func(msg *Event) {
 			evt := new(PageDelete)
 			parseSchema(evt, msg, store)
-			handler(evt)
+
+			if err := handler(evt); err != nil {
+				store.setError(err)
+			}
 		})
 	})
 }
 
 // PageMove connect to page move stream
-func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(evt *PageMove)) *Stream {
+func (cl *Client) PageMove(ctx context.Context, since time.Time, handler func(evt *PageMove) error) *Stream {
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.httpClient, cl.url+cl.options.PageMoveURL, store.getSince(), func(msg *Event) {
 			evt := new(PageMove)
 			parseSchema(evt, msg, store)
-			handler(evt)
+
+			if err := handler(evt); err != nil {
+				store.setError(err)
+			}
 		})
 	})
 }
 
 // RevisionCreate connect to revision create stream
-func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler func(evt *RevisionCreate)) *Stream {
+func (cl *Client) RevisionCreate(ctx context.Context, since time.Time, handler func(evt *RevisionCreate) error) *Stream {
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.httpClient, cl.url+cl.options.RevisionCreateURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionCreate)
 			parseSchema(evt, msg, store)
-			handler(evt)
+
+			if err := handler(evt); err != nil {
+				store.setError(err)
+			}
 		})
 	})
 }
 
 // RevisionScore connect to revision score stream
-func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler func(evt *RevisionScore)) *Stream {
+func (cl *Client) RevisionScore(ctx context.Context, since time.Time, handler func(evt *RevisionScore) error) *Stream {
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.httpClient, cl.url+cl.options.RevisionScoreURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionScore)
 			parseSchema(evt, msg, store)
-			handler(evt)
+
+			if err := handler(evt); err != nil {
+				store.setError(err)
+			}
 		})
 	})
 }
 
 // RevisionVisibilityChange connect to revision visibility change stream
-func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time, handler func(evt *RevisionVisibilityChange)) *Stream {
+func (cl *Client) RevisionVisibilityChange(ctx context.Context, since time.Time, handler func(evt *RevisionVisibilityChange) error) *Stream {
 	store := newStorage(since, cl.backoffTime)
 
 	return NewStream(store, func(since time.Time) error {
 		return subscribe(ctx, cl.httpClient, cl.url+cl.options.RevisionVisibilityChangeURL, store.getSince(), func(msg *Event) {
 			evt := new(RevisionVisibilityChange)
 			parseSchema(evt, msg, store)
-			handler(evt)
+
+			if err := handler(evt); err != nil {
+				store.setError(err)
+			}
 		})
 	})
 }

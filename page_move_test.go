@@ -2,6 +2,7 @@ package eventstream
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var errPageMoveTest = errors.New("page move test error")
 var pageMoveTestErrors = []error{io.EOF, io.EOF, context.Canceled}
 var pageMoveTestSince = time.Now().UTC()
 var pageMoveTestResponse = map[int]struct {
@@ -99,8 +101,9 @@ func TestPageMoveExec(t *testing.T) {
 		}).
 		Build()
 
-	stream := client.PageMove(context.Background(), pageMoveTestSince, func(evt *PageMove) {
+	stream := client.PageMove(context.Background(), pageMoveTestSince, func(evt *PageMove) error {
 		testPageMoveEvent(t, evt)
+		return nil
 	})
 
 	assert.Equal(t, io.EOF, stream.Exec())
@@ -124,7 +127,7 @@ func TestPageMoveSub(t *testing.T) {
 		Build()
 
 	msgs := 0
-	stream := client.PageMove(ctx, pageMoveTestSince, func(evt *PageMove) {
+	stream := client.PageMove(ctx, pageMoveTestSince, func(evt *PageMove) error {
 		testPageMoveEvent(t, evt)
 		since = evt.Data.Meta.Dt
 		msgs++
@@ -132,6 +135,8 @@ func TestPageMoveSub(t *testing.T) {
 		if msgs > 3 {
 			cancel()
 		}
+
+		return nil
 	})
 
 	errs := 0
@@ -141,4 +146,57 @@ func TestPageMoveSub(t *testing.T) {
 	}
 
 	assert.Equal(t, 4, msgs)
+}
+
+func TestPageMoveExecError(t *testing.T) {
+	since := pageMoveTestSince
+	router, err := createPageMoveServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			PageMoveURL: pageMoveTestSubURL,
+		}).
+		Build()
+
+	stream := client.PageMove(context.Background(), pageMoveTestSince, func(evt *PageMove) error {
+		testPageMoveEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errPageMoveTest
+	})
+
+	assert.Equal(t, errPageMoveTest, stream.Exec())
+}
+
+func TestPageMoveSubError(t *testing.T) {
+	since := pageMoveTestSince
+	router, err := createPageMoveServer(t, &since)
+
+	assert.Nil(t, err)
+
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	client := NewBuilder().
+		URL(srv.URL).
+		Options(&Options{
+			PageMoveURL: pageMoveTestSubURL,
+		}).
+		Build()
+
+	stream := client.PageMove(context.Background(), pageMoveTestSince, func(evt *PageMove) error {
+		testPageMoveEvent(t, evt)
+		since = evt.Data.Meta.Dt
+		return errPageMoveTest
+	})
+
+	for err := range stream.Sub() {
+		assert.Equal(t, errPageMoveTest, err)
+		break
+	}
 }

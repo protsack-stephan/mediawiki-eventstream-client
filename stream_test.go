@@ -43,7 +43,7 @@ func TestStream(t *testing.T) {
 	assert.Equal(t, keepAliveNumberOfErrors, thrownErrs)
 	assert.Equal(t, keepAliveNumberOfErrors, caughtErrs)
 
-	stream = NewStream(storage, func(since time.Time) error {
+	stream = NewStream(newStorage(streamTestSince, streamTestBackoff), func(since time.Time) error {
 		assert.Equal(t, streamTestSince, since)
 		return errStreamTest
 	})
