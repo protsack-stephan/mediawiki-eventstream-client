@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// PageCreate event scheme struct
+// PageCreate event schema struct
 type PageCreate struct {
 	baseSchema
 	Data struct {
